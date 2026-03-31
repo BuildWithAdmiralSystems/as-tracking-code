@@ -1,4 +1,4 @@
-# AS Tracking Code
+# Admiral Systems Tracking Code
 
 A lightweight, attribute-driven analytics tracker for **Webflow** sites. Track pageviews, clicks, form submissions, and ecommerce events by adding HTML `data-`* attributes — no custom JavaScript required.
 
@@ -40,7 +40,7 @@ Add this to **Project Settings > Custom Code > Footer Code** (or before `</body>
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/gh/your-org/as-tracking-code@latest/dist/webflow-tracker.min.js"
+  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.0.1/dist/webflow-tracker.min.js"
   data-posthog="true"
   data-ga4-id="G-XXXXXXX"
   data-ga4-consent-defaults="denied"
