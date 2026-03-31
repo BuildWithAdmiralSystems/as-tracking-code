@@ -1,4 +1,4 @@
-import { captureEvent, identifyUser } from './posthog-adapter';
+import { captureEvent, identifyUser } from './dispatcher';
 import { findClosestAncestor } from './utils';
 
 const handleFormSubmit = (event: SubmitEvent) => {

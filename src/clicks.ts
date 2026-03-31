@@ -1,6 +1,8 @@
-import { captureEvent } from './posthog-adapter';
+import { captureEvent } from './dispatcher';
 import { findClosestAncestor, parseProperty } from './utils';
+import { resolvePropertyValue } from './property-resolver';
 import { getPageviewProperties } from './pageview';
+import { handleEcommerceClick } from './ga4-ecommerce';
 
 const handleCmsClick = (element: HTMLElement, eventName: string) => {
   const wrapper = findClosestAncestor(element, '[data-wrapper="true"]');
@@ -8,47 +10,18 @@ const handleCmsClick = (element: HTMLElement, eventName: string) => {
 
   const properties: Record<string, any> = {};
   const propertyElements = wrapper.querySelectorAll('[data-property-name]');
-  
+
   propertyElements.forEach(propElement => {
     const propertyNameAttr = propElement.getAttribute('data-property-name');
     if (propertyNameAttr) {
-        const { name, value } = parseProperty(propertyNameAttr);
-        let propertyValue: any;
-
-        const valueAttr = propElement.getAttribute('data-property-value');
-        const resolvedValue = valueAttr || value;
-
-        switch (resolvedValue) {
-          case 'innerHTML':
-            propertyValue = propElement.innerHTML;
-            break;
-          case 'innerHTML-parseInt':
-            propertyValue = parseInt(propElement.innerHTML, 10);
-            break;
-          case 'innerHTML-parseFloat':
-            propertyValue = parseFloat(propElement.innerHTML);
-            break;
-          case 'innerText':
-            propertyValue = (propElement as HTMLElement).innerText;
-            break;
-          case 'innerText-parseInt':
-            propertyValue = parseInt((propElement as HTMLElement).innerText, 10);
-            break;
-          case 'innerText-parseFloat':
-            propertyValue = parseFloat((propElement as HTMLElement).innerText);
-            break;
-         case 'boolean:true':
-            propertyValue = true;
-            break;
-          case 'boolean:false':
-            propertyValue = false;
-            break;
-          default:
-            propertyValue = resolvedValue;
-        }
-        properties[name] = propertyValue;
+      const { name, value } = parseProperty(propertyNameAttr);
+      const valueAttr = propElement.getAttribute('data-property-value');
+      const resolvedValue = valueAttr || value;
+      properties[name] = resolvePropertyValue(resolvedValue, propElement);
     }
   });
+
+  if (handleEcommerceClick(element, eventName, properties)) return;
 
   captureEvent(eventName, properties);
 };
@@ -70,41 +43,14 @@ const handleStaticClick = (element: HTMLElement, eventName: string) => {
           properties[name] = pageviewProperties[name];
         }
       } else {
-        let propertyValue: any;
-        switch (resolvedValue) {
-          case 'innerHTML':
-            propertyValue = element.innerHTML;
-            break;
-          case 'innerHTML-parseInt':
-            propertyValue = parseInt(element.innerHTML, 10);
-            break;
-          case 'innerHTML-parseFloat':
-            propertyValue = parseFloat(element.innerHTML);
-            break;
-          case 'innerText':
-            propertyValue = (element as HTMLElement).innerText;
-            break;
-          case 'innerText-parseInt':
-            propertyValue = parseInt((element as HTMLElement).innerText, 10);
-            break;
-          case 'innerText-parseFloat':
-            propertyValue = parseFloat((element as HTMLElement).innerText);
-            break;
-          case 'boolean:true':
-            propertyValue = true;
-            break;
-          case 'boolean:false':
-            propertyValue = false;
-            break;
-          default:
-            propertyValue = resolvedValue;
-        }
-        properties[name] = propertyValue;
+        properties[name] = resolvePropertyValue(resolvedValue, element);
       }
     } else {
-      break; 
+      break;
     }
   }
+
+  if (handleEcommerceClick(element, eventName, properties)) return;
 
   captureEvent(eventName, properties);
 };

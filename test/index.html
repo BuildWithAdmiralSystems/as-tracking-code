@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tracker Test Page</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 900px; margin: 0 auto; color: #1a1a1a; }
+    h1 { margin-bottom: 0.5rem; }
+    h2 { margin-top: 2rem; margin-bottom: 0.75rem; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
+    section { margin-bottom: 2rem; }
+    button { padding: 0.5rem 1rem; border: 1px solid #333; border-radius: 4px; cursor: pointer; margin: 0.25rem; background: #fff; }
+    button:hover { background: #f0f0f0; }
+    .primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .primary:hover { background: #1d4ed8; }
+    .danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+    .danger:hover { background: #b91c1c; }
+    input[type="text"], input[type="email"], input[type="number"] {
+      display: block; width: 100%; padding: 0.5rem; margin: 0.25rem 0 0.75rem; border: 1px solid #ccc; border-radius: 4px;
+    }
+    label { font-weight: 600; font-size: 0.9rem; }
+    .log { background: #111; color: #0f0; padding: 1rem; border-radius: 4px; font-family: monospace; font-size: 0.8rem; max-height: 400px; overflow-y: auto; white-space: pre-wrap; }
+    .cookie-banner {
+      position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 2px solid #333;
+      padding: 1.5rem; display: none; z-index: 9999; box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+    }
+    .cookie-banner h3 { margin-bottom: 0.5rem; }
+    .cookie-options { margin: 1rem 0; }
+    .cookie-options label { display: block; margin: 0.25rem 0; font-weight: 400; }
+    .cookie-icon {
+      position: fixed; bottom: 1rem; right: 1rem; width: 40px; height: 40px; background: #333; color: #fff;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;
+      font-size: 1.2rem; z-index: 9998;
+    }
+    .badge { display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background: #e5e7eb; margin-left: 0.5rem; }
+    .badge.posthog { background: #1d4aff; color: #fff; }
+    .badge.ga4 { background: #ea8600; color: #fff; }
+  </style>
+
+  <!-- Mock PostHog -->
+  <script>
+    window.posthog = {
+      capture: function(event, props) {
+        logCall('PostHog.capture', { event: event, properties: props });
+      },
+      identify: function(props) {
+        logCall('PostHog.identify', { properties: props });
+      }
+    };
+  </script>
+
+  <!-- Mock gtag / dataLayer -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      var args = Array.prototype.slice.call(arguments);
+      window.dataLayer.push(arguments);
+      logCall('gtag(' + args[0] + ')', args.slice(1));
+    }
+    window.gtag = gtag;
+  </script>
+</head>
+
+<body data-event="Test Page Viewed">
+
+  <h1 data-pageview-property-name="page_title">Webflow Tracker Test Page</h1>
+  <p data-pageview-property-name="page_category:static_value">
+    <span class="badge posthog">PostHog</span>
+    <span class="badge ga4">GA4</span>
+    Both adapters enabled. Open the console or watch the log below.
+  </p>
+
+  <!-- Pageview properties -->
+  <span  style="display:none">Test Page</span>
+  <span  style="display:none"></span>
+
+  <!-- SECTION: Static Click -->
+  <section>
+    <h2>Static Click Events</h2>
+    <button
+      data-event="CTA Clicked"
+      data-property-name1="button_label:Hero CTA"
+      data-property-name2="button_position:top"
+    >
+      Click Me (Static)
+    </button>
+
+    <button
+      data-event="Pricing Clicked"
+      data-property-name1="plan:Enterprise"
+      data-property-name2="page_title:grabPageview"
+    >
+      Pricing Button (grabPageview)
+    </button>
+  </section>
+
+  <!-- SECTION: CMS Click -->
+  <section>
+    <h2>CMS Click Events</h2>
+    <div data-wrapper="true" style="border:1px solid #ddd; padding:1rem; border-radius:4px;">
+      <p data-property-name="product_name">Widget Pro</p>
+      <p data-property-name="product_price" data-property-value="innerHTML-parseInt">49</p>
+      <button data-event="Product Selected" data-cms="true">Select Product (CMS)</button>
+    </div>
+  </section>
+
+  <!-- SECTION: GA4 Ecommerce Click -->
+  <section>
+    <h2>GA4 Ecommerce Event</h2>
+    <div data-wrapper="true" style="border:1px solid #ddd; padding:1rem; border-radius:4px;">
+      <span data-ga4-item-item_id="item_id" style="display:none">SKU_999</span>
+      <span data-ga4-item-item_name="item_name">Deluxe Widget</span>
+      <span data-ga4-item-price="price" data-property-value="innerHTML-parseFloat" style="display:none">79.99</span>
+      <button
+        data-event="Add To Cart"
+        data-ga4-ecommerce="add_to_cart"
+        data-cms="true"
+        data-property-name1="currency:USD"
+        data-property-name2="value:79.99"
+      >
+        Add to Cart (Ecommerce)
+      </button>
+    </div>
+  </section>
+
+  <!-- SECTION: Form -->
+  <section>
+    <h2>Form Submission</h2>
+    <form data-event="Contact Form Submitted">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" data-identify="true" value="test@example.com" />
+
+      <label for="first_name">First Name</label>
+      <input type="text" id="first_name" name="first_name" data-identify="true" value="Jane" />
+
+      <label for="interest">Interest</label>
+      <input type="text" id="interest" name="interest" data-track="true" value="Analytics" />
+
+      <label for="company_size">Company Size</label>
+      <input type="number" id="company_size" name="company_size" data-both-identify-and-track="true" data-parse-int="true" value="50" />
+
+      <button type="submit">Submit Form</button>
+    </form>
+  </section>
+
+  <!-- SECTION: Console API -->
+  <section>
+    <h2>Console API</h2>
+    <button onclick="webflowTracker.updateConsent({analytics_storage:'granted',ad_user_data:'granted'})">
+      Grant Analytics + Ad User Data
+    </button>
+    <button onclick="webflowTracker.updateConsent({analytics_storage:'denied'})">
+      Deny Analytics
+    </button>
+    <button onclick="logCall('getConsentState()', webflowTracker.getConsentState())">
+      Read Consent State
+    </button>
+    <button class="danger" onclick="localStorage.removeItem('consentMode'); location.reload();">
+      Reset Consent (reload)
+    </button>
+  </section>
+
+  <!-- SECTION: Event Log -->
+  <section>
+    <h2>Event Log</h2>
+    <div id="event-log" class="log">(events will appear here)</div>
+  </section>
+
+  <!-- Cookie Consent Banner (as-* convention) -->
+  <div id="as-cookie-banner" class="cookie-banner">
+    <h3>Cookie Settings</h3>
+    <p>We use cookies to provide you with the best possible experience.</p>
+    <div class="cookie-options" id="as-cookie-options">
+      <label><input type="checkbox" id="as-consent-functionality" checked /> Functionality</label>
+      <label><input type="checkbox" id="as-consent-analytics" /> Analytics Storage</label>
+      <label><input type="checkbox" id="as-consent-ad-storage" /> Ad Storage</label>
+      <label><input type="checkbox" id="as-consent-ad-user-data" /> Ad User Data</label>
+      <label><input type="checkbox" id="as-consent-ad-personalization" /> Ad Personalization</label>
+      <label><input type="checkbox" id="as-consent-personalization" /> Personalization Storage</label>
+      <label><input type="checkbox" id="as-consent-security" /> Security Storage</label>
+    </div>
+    <div>
+      <button id="as-btn-reject-all" class="danger">Reject All</button>
+      <button id="as-btn-accept-some">Accept Selection</button>
+      <button id="as-btn-accept-all" class="primary">Accept All</button>
+    </div>
+  </div>
+
+  <div id="as-cookie-icon" class="cookie-icon">🍪</div>
+
+  <!-- Logging helper (must be before tracker) -->
+  <script>
+    var logEl = null;
+    function logCall(label, data) {
+      if (!logEl) logEl = document.getElementById('event-log');
+      var ts = new Date().toLocaleTimeString();
+      var entry = '[' + ts + '] ' + label + '\n' + JSON.stringify(data, null, 2) + '\n\n';
+      if (logEl) logEl.textContent += entry;
+      console.log(label, data);
+    }
+  </script>
+
+  <!-- The Tracker Script (dev-mode + both adapters) -->
+  <script
+    src="../dist/webflow-tracker.js"
+    data-posthog="true"
+    data-ga4-id="G-TEST123"
+    data-ga4-consent-defaults="denied"
+    data-ga4-user-id-field="email"
+  ></script>
+
+</body>
+</html>
