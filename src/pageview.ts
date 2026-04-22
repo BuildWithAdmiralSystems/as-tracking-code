@@ -1,4 +1,4 @@
-import { captureEvent } from './dispatcher';
+import { captureEvent, resolveConversionSendTo } from './dispatcher';
 import { parseProperty } from './utils';
 import { resolvePropertyValue } from './property-resolver';
 
@@ -20,7 +20,8 @@ const handlePageview = () => {
       }
     });
 
-    captureEvent(eventName, pageviewProperties);
+    const conversionSendTo = resolveConversionSendTo(body.getAttribute('data-ga4-conversion'));
+    captureEvent(eventName, pageviewProperties, conversionSendTo);
   }
 };
 

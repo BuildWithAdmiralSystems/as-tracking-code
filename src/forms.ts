@@ -1,4 +1,4 @@
-import { captureEvent, identifyUser } from './dispatcher';
+import { captureEvent, identifyUser, resolveConversionSendTo } from './dispatcher';
 import { findClosestAncestor } from './utils';
 
 const handleFormSubmit = (event: SubmitEvent) => {
@@ -46,8 +46,10 @@ const handleFormSubmit = (event: SubmitEvent) => {
         }
     }
 
-    if (Object.keys(trackProperties).length > 0) {
-        captureEvent(eventName, trackProperties);
+    const conversionSendTo = resolveConversionSendTo(form.getAttribute('data-ga4-conversion'));
+
+    if (Object.keys(trackProperties).length > 0 || conversionSendTo) {
+        captureEvent(eventName, trackProperties, conversionSendTo);
     }
 
     if (Object.keys(identifyProperties).length > 0) {

@@ -18,13 +18,22 @@ const RESERVED_EVENT_NAMES = new Set([
 ]);
 
 const RESERVED_PARAM_NAMES = new Set([
-  'cid', 'currency', 'customer_id', 'customerid', 'dclid', 'gclid',
+  'cid', 'customer_id', 'customerid', 'dclid', 'gclid',
   'session_id', 'sessionid', 'sfmc_id', 'sid', 'srsltid', 'uid',
   'user_id', 'userid',
 ]);
 
 const RESERVED_PARAM_PREFIXES = ['_', 'firebase_', 'ga_', 'google_', 'gtag.'];
 const RESERVED_EVENT_PREFIXES = ['query_id'];
+
+const GA4_RECOMMENDED_EVENT_PARAMS: Record<string, string[]> = {
+  generate_lead: ['currency', 'value'],
+  login: ['method'],
+  sign_up: ['method'],
+  search: ['search_term'],
+  select_content: ['content_type', 'item_id'],
+  share: ['method', 'content_type', 'item_id'],
+};
 
 const RESERVED_USER_PROPERTY_NAMES = new Set([
   'cid', 'customer_id', 'customerid', 'first_open_after_install',
@@ -161,4 +170,22 @@ export function validateAndTruncateUserProperties(
   }
 
   return result;
+}
+
+export function warnMissingRecommendedParams(
+  eventName: string,
+  properties: Record<string, any>
+): void {
+  const prescribed = GA4_RECOMMENDED_EVENT_PARAMS[eventName];
+  if (!prescribed) return;
+
+  const missing = prescribed.filter(
+    p => !(p in properties) || properties[p] === undefined || properties[p] === null || properties[p] === ''
+  );
+
+  if (missing.length > 0) {
+    console.warn(
+      `GA4: Recommended event "${eventName}" is missing prescribed parameters: ${missing.join(', ')}. See https://support.google.com/analytics/answer/9267735`
+    );
+  }
 }

@@ -235,6 +235,26 @@ A full purchase event with multiple items:
 </div>
 ```
 
+## Firing a Google Ads Conversion with an Ecommerce Event
+
+Most teams want their `purchase` event to also fire a Google Ads conversion. Add `data-ga4-conversion` to the trigger element — the conversion call reuses the same event parameters (value, currency, transaction_id):
+
+```html
+<button
+  data-event="Order Completed"
+  data-ga4-ecommerce="purchase"
+  data-ga4-conversion="AW-12345678/AbC-DeFgH"
+  data-cms="true"
+  data-property-name1="transaction_id:TXN_98765"
+  data-property-name2="currency:USD"
+  data-property-name3="value:199.98"
+>
+  Confirm Purchase
+</button>
+```
+
+This fires both the GA4 ecommerce event (with `items[]`) and a `gtag('event', 'conversion', { send_to: 'AW-12345678/AbC-DeFgH', transaction_id: 'TXN_98765', currency: 'USD', value: '199.98' })` call. The `transaction_id` powers Google Ads deduplication. See [Google Ads Conversions](google-ads-conversions.md) for full details.
+
 ## Debugging
 
 Use `dev-mode` on the script tag to see the assembled ecommerce payload in the console:

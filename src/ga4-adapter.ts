@@ -4,6 +4,7 @@ import {
   validateEventName,
   validateAndTruncateParams,
   validateAndTruncateUserProperties,
+  warnMissingRecommendedParams,
 } from './ga4-validator';
 
 function isGtagAvailable(): boolean {
@@ -24,6 +25,7 @@ export function captureGA4Event(eventName: string, properties: Record<string, an
   }
 
   const truncated = validateAndTruncateParams(properties);
+  warnMissingRecommendedParams(normalized, truncated);
   window.gtag('event', normalized, truncated);
 }
 
@@ -45,6 +47,19 @@ export function captureGA4EcommerceEvent(
 
   const truncated = validateAndTruncateParams(eventParams);
   window.gtag('event', ecommerceEventName, { ...truncated, items });
+}
+
+export function captureGA4Conversion(
+  sendTo: string,
+  properties: Record<string, any>
+): void {
+  if (!isGtagAvailable()) {
+    console.error('GA4: window.gtag is not available.');
+    return;
+  }
+
+  const truncated = validateAndTruncateParams(properties);
+  window.gtag('event', 'conversion', { send_to: sendTo, ...truncated });
 }
 
 export function identifyGA4User(userProperties: Record<string, any>): void {

@@ -165,7 +165,40 @@ GA4 enforces strict limits on event parameters. The tracker handles this with wa
 
 ### Reserved Parameter Names
 
-`cid`, `currency`, `customer_id`, `customerid`, `dclid`, `gclid`, `session_id`, `sessionid`, `sfmc_id`, `sid`, `srsltid`, `uid`, `user_id`, `userid`
+`cid`, `customer_id`, `customerid`, `dclid`, `gclid`, `session_id`, `sessionid`, `sfmc_id`, `sid`, `srsltid`, `uid`, `user_id`, `userid`
+
+> Note: `currency` is **not** reserved — it is a prescribed parameter for ecommerce events and `generate_lead`, so it is forwarded to GA4 normally.
+
+## Recommended Event Prescribed Parameters
+
+GA4 recommends specific events with prescribed parameters to power reports and future features. The tracker warns in the console when a recognized recommended event is missing its prescribed parameters. The event is still sent — the warning is just a hint to fix the configuration.
+
+| Event | Prescribed Parameters |
+|---|---|
+| `generate_lead` | `currency`, `value` |
+| `login` | `method` |
+| `sign_up` | `method` |
+| `search` | `search_term` |
+| `select_content` | `content_type`, `item_id` |
+| `share` | `method`, `content_type`, `item_id` |
+
+Example warning:
+
+```
+GA4: Recommended event "generate_lead" is missing prescribed parameters: currency, value. See https://support.google.com/analytics/answer/9267735
+```
+
+To avoid the warning, include the prescribed parameters via `data-property-name{i}`:
+
+```html
+<form data-event="generate_lead"
+      data-property-name1="currency:USD"
+      data-property-name2="value:50">
+  ...
+</form>
+```
+
+For the full list of recommended events, see [GA4 Recommended Events](https://support.google.com/analytics/answer/9267735).
 
 ## User Identification
 
@@ -204,6 +237,10 @@ User properties have their own limits:
 ### Consent for Identification
 
 GA4 user identification requires **both** `analytics_storage` and `ad_user_data` to be `'granted'`. If either is denied, the `identifyGA4User` call is skipped (PostHog identification still works if `analytics_storage` is granted).
+
+## Google Ads Conversions
+
+To fire a Google Ads conversion alongside any tracked event, add `data-ga4-conversion="AW-XXX/label"` to the element. See [Google Ads Conversions](google-ads-conversions.md) for the full guide.
 
 ## Debugging
 

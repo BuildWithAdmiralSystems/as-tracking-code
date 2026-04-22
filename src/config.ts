@@ -4,6 +4,7 @@ export interface TrackerConfig {
   ga4Lowercase: boolean;
   ga4UserIdField: string;
   ga4ConsentDefaults: 'denied' | null;
+  googleAdsId: string | null;
   devMode: boolean;
 }
 
@@ -29,6 +30,11 @@ function parseConfig(): TrackerConfig {
   const consentDefaultsRaw = attr('data-ga4-consent-defaults');
   const ga4ConsentDefaults = consentDefaultsRaw === 'denied' ? 'denied' : null;
 
+  const googleAdsIdRaw = attr('data-google-ads-id');
+  const googleAdsId = googleAdsIdRaw && googleAdsIdRaw.trim().length > 0
+    ? googleAdsIdRaw.trim()
+    : null;
+
   const devMode = scriptElement ? scriptElement.hasAttribute('dev-mode') : false;
 
   return {
@@ -37,6 +43,7 @@ function parseConfig(): TrackerConfig {
     ga4Lowercase,
     ga4UserIdField,
     ga4ConsentDefaults,
+    googleAdsId,
     devMode,
   };
 }

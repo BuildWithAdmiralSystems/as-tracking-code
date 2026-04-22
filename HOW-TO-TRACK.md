@@ -99,7 +99,7 @@ REMEMBER:
 3. `data-property-name{i}` OR `data-property-name` **must be declared first** before you put any property values inside.
 4. `data-property-name{i}` OR `data-property-name` is declared depending on the type of event that you want to declare (we will discuss further on later sections.).
 
-There are 6 types of properties:
+There are 7 types of properties:
 
 - `innerHTML`: You’re grabbing an `innerHTML` value from an existing HTML element.
   - [See the documentation regarding `Element.innerHTML` for more details.](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML)
@@ -109,6 +109,7 @@ There are 6 types of properties:
 - `boolean:false`: This adds a `false` boolean value inside your property
 - `grabPageview`: This grabs a Pageview Event property that has the same Property name.
   - We will explain this further under Pageview Events section.
+- `grabPagePath`: This grabs the current page's pathname via `window.location.pathname` (e.g., `/blog/my-post`). Useful when you want to attach the current route to every event without hardcoding it.
 - **Static values**: Static values are any valid strings besides the mentioned above.
   - **These values are immutable once a Webflow project is published, hence the name ‘static’.**
 
@@ -173,6 +174,7 @@ These are the property values that is supported with this syntax
 | boolean:true                                                        | ❌         |
 | boolean:false                                                       | ❌         |
 | grabPageview                                                        | ✅         |
+| grabPagePath                                                        | ✅         |
 | Static Values (as long as it’s not using the colon ( : ) character) | ✅         |
 
 ## 2.3. Static Event Properties
@@ -278,6 +280,7 @@ gtag('event', 'Blog_Post_Viewed', {
 | boolean:true         | ✅                                                                  |
 | boolean:false        | ✅                                                                  |
 | grabPageview         | ❌ (This will cause infinite loop in your Webflow. DO NOT USE THIS) |
+| grabPagePath         | ✅                                                                  |
 | Static Values        | ✅                                                                  |
 
 ### 2.4.2. The `grabPageview` property value
@@ -661,8 +664,9 @@ By default, **If you omit `data-property-value` Custom Attribute inside an eleme
 
 - [Configuration Reference](docs/configuration-reference.md) — all script tag attributes
 - [Connecting PostHog](docs/connecting-posthog.md) — PostHog setup guide
-- [Connecting GA4](docs/connecting-ga4.md) — GA4 setup, naming rules, and parameter limits
+- [Connecting GA4](docs/connecting-ga4.md) — GA4 setup, naming rules, parameter limits, and recommended events
 - [GA4 Ecommerce](docs/ga4-ecommerce.md) — ecommerce event tracking
+- [Google Ads Conversions](docs/google-ads-conversions.md) — fire Google Ads conversions via `data-ga4-conversion`
 - [Consent Banner](docs/consent-banner.md) — GDPR-compliant cookie consent in Webflow
 - [PostHog Track Spec](https://posthog.com/docs/getting-started/send-events)
 - [GA4 Event Reference](https://developers.google.com/analytics/devguides/collection/ga4/reference/events)

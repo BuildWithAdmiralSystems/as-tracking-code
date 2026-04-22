@@ -15,6 +15,10 @@ var webflowTracker = (function (exports) {
         const ga4UserIdField = attr('data-ga4-user-id-field') || 'email';
         const consentDefaultsRaw = attr('data-ga4-consent-defaults');
         const ga4ConsentDefaults = consentDefaultsRaw === 'denied' ? 'denied' : null;
+        const googleAdsIdRaw = attr('data-google-ads-id');
+        const googleAdsId = googleAdsIdRaw && googleAdsIdRaw.trim().length > 0
+            ? googleAdsIdRaw.trim()
+            : null;
         const devMode = scriptElement ? scriptElement.hasAttribute('dev-mode') : false;
         return {
             posthogEnabled,
@@ -22,6 +26,7 @@ var webflowTracker = (function (exports) {
             ga4Lowercase,
             ga4UserIdField,
             ga4ConsentDefaults,
+            googleAdsId,
             devMode,
         };
     }
@@ -265,12 +270,20 @@ var webflowTracker = (function (exports) {
         'video_progress', 'video_start', 'view_search_results',
     ]);
     const RESERVED_PARAM_NAMES = new Set([
-        'cid', 'currency', 'customer_id', 'customerid', 'dclid', 'gclid',
+        'cid', 'customer_id', 'customerid', 'dclid', 'gclid',
         'session_id', 'sessionid', 'sfmc_id', 'sid', 'srsltid', 'uid',
         'user_id', 'userid',
     ]);
     const RESERVED_PARAM_PREFIXES = ['_', 'firebase_', 'ga_', 'google_', 'gtag.'];
     const RESERVED_EVENT_PREFIXES = ['query_id'];
+    const GA4_RECOMMENDED_EVENT_PARAMS = {
+        generate_lead: ['currency', 'value'],
+        login: ['method'],
+        sign_up: ['method'],
+        search: ['search_term'],
+        select_content: ['content_type', 'item_id'],
+        share: ['method', 'content_type', 'item_id'],
+    };
     const RESERVED_USER_PROPERTY_NAMES = new Set([
         'cid', 'customer_id', 'customerid', 'first_open_after_install',
         'first_open_time', 'first_visit_time',
@@ -373,6 +386,15 @@ var webflowTracker = (function (exports) {
         }
         return result;
     }
+    function warnMissingRecommendedParams(eventName, properties) {
+        const prescribed = GA4_RECOMMENDED_EVENT_PARAMS[eventName];
+        if (!prescribed)
+            return;
+        const missing = prescribed.filter(p => !(p in properties) || properties[p] === undefined || properties[p] === null || properties[p] === '');
+        if (missing.length > 0) {
+            console.warn(`GA4: Recommended event "${eventName}" is missing prescribed parameters: ${missing.join(', ')}. See https://support.google.com/analytics/answer/9267735`);
+        }
+    }
 
     function isGtagAvailable() {
         return typeof window.gtag === 'function';
@@ -389,6 +411,7 @@ var webflowTracker = (function (exports) {
             return;
         }
         const truncated = validateAndTruncateParams(properties);
+        warnMissingRecommendedParams(normalized, truncated);
         window.gtag('event', normalized, truncated);
     }
     function captureGA4EcommerceEvent(ecommerceEventName, eventParams, items) {
@@ -403,6 +426,14 @@ var webflowTracker = (function (exports) {
         }
         const truncated = validateAndTruncateParams(eventParams);
         window.gtag('event', ecommerceEventName, { ...truncated, items });
+    }
+    function captureGA4Conversion(sendTo, properties) {
+        if (!isGtagAvailable()) {
+            console.error('GA4: window.gtag is not available.');
+            return;
+        }
+        const truncated = validateAndTruncateParams(properties);
+        window.gtag('event', 'conversion', { send_to: sendTo, ...truncated });
     }
     function identifyGA4User(userProperties) {
         if (!isGtagAvailable()) {
@@ -427,10 +458,28 @@ var webflowTracker = (function (exports) {
         }
     }
 
-    function captureEvent(eventName, properties) {
+    function resolveConversionSendTo(raw) {
+        if (!raw)
+            return null;
+        const trimmed = raw.trim();
+        if (trimmed.length === 0)
+            return null;
+        // Already a full send_to (contains "/" or starts with AW-/DC-)
+        if (trimmed.includes('/') || trimmed.startsWith('AW-') || trimmed.startsWith('DC-')) {
+            return trimmed;
+        }
+        // Bare label — prepend configured Google Ads ID
+        const config = getConfig();
+        if (!config.googleAdsId) {
+            console.warn(`Tracker: data-ga4-conversion="${trimmed}" is a bare label but no data-google-ads-id is configured on the script tag. Conversion skipped.`);
+            return null;
+        }
+        return `${config.googleAdsId}/${trimmed}`;
+    }
+    function captureEvent(eventName, properties, conversionSendTo) {
         const config = getConfig();
         if (config.devMode) {
-            console.log('[Tracker DEV] captureEvent', { eventName, properties });
+            console.log('[Tracker DEV] captureEvent', { eventName, properties, conversionSendTo });
             return;
         }
         if (!isAnalyticsGranted())
@@ -440,6 +489,9 @@ var webflowTracker = (function (exports) {
         }
         if (config.ga4Ids.length > 0) {
             captureGA4Event(eventName, properties);
+        }
+        if (conversionSendTo) {
+            captureGA4Conversion(conversionSendTo, properties);
         }
     }
     function identifyUser(userProperties) {
@@ -457,16 +509,24 @@ var webflowTracker = (function (exports) {
             identifyGA4User(userProperties);
         }
     }
-    function captureEcommerceEvent(ecommerceEventName, eventParams, items) {
+    function captureEcommerceEvent(ecommerceEventName, eventParams, items, conversionSendTo) {
         const config = getConfig();
         if (config.devMode) {
-            console.log('[Tracker DEV] captureEcommerceEvent', { ecommerceEventName, eventParams, items });
+            console.log('[Tracker DEV] captureEcommerceEvent', {
+                ecommerceEventName,
+                eventParams,
+                items,
+                conversionSendTo,
+            });
             return;
         }
         if (!isAnalyticsGranted())
             return;
         if (config.ga4Ids.length > 0) {
             captureGA4EcommerceEvent(ecommerceEventName, eventParams, items);
+        }
+        if (conversionSendTo) {
+            captureGA4Conversion(conversionSendTo, eventParams);
         }
     }
 
@@ -516,6 +576,8 @@ var webflowTracker = (function (exports) {
                 return true;
             case 'boolean:false':
                 return false;
+            case 'grabPagePath':
+                return window.location.pathname;
             default:
                 return resolvedValue;
         }
@@ -536,7 +598,8 @@ var webflowTracker = (function (exports) {
                     pageviewProperties[name] = resolvePropertyValue(resolvedValue, element);
                 }
             });
-            captureEvent(eventName, pageviewProperties);
+            const conversionSendTo = resolveConversionSendTo(body.getAttribute('data-ga4-conversion'));
+            captureEvent(eventName, pageviewProperties, conversionSendTo);
         }
     };
     const initializePageviewListener = () => {
@@ -599,7 +662,8 @@ var webflowTracker = (function (exports) {
         }
         const wrapper = findClosestAncestor(element, '[data-wrapper="true"]');
         const items = wrapper ? collectItemsFromWrapper(wrapper) : [];
-        captureEcommerceEvent(ecommerceType, properties, items);
+        const conversionSendTo = resolveConversionSendTo(element.getAttribute('data-ga4-conversion'));
+        captureEcommerceEvent(ecommerceType, properties, items, conversionSendTo);
         return true;
     }
 
@@ -620,7 +684,8 @@ var webflowTracker = (function (exports) {
         });
         if (handleEcommerceClick(element, eventName, properties))
             return;
-        captureEvent(eventName, properties);
+        const conversionSendTo = resolveConversionSendTo(element.getAttribute('data-ga4-conversion'));
+        captureEvent(eventName, properties, conversionSendTo);
     };
     const handleStaticClick = (element, eventName) => {
         const properties = {};
@@ -646,7 +711,8 @@ var webflowTracker = (function (exports) {
         }
         if (handleEcommerceClick(element, eventName, properties))
             return;
-        captureEvent(eventName, properties);
+        const conversionSendTo = resolveConversionSendTo(element.getAttribute('data-ga4-conversion'));
+        captureEvent(eventName, properties, conversionSendTo);
     };
     const handleGlobalClick = (event) => {
         const target = event.target;
@@ -705,8 +771,9 @@ var webflowTracker = (function (exports) {
                 }
             }
         }
-        if (Object.keys(trackProperties).length > 0) {
-            captureEvent(eventName, trackProperties);
+        const conversionSendTo = resolveConversionSendTo(form.getAttribute('data-ga4-conversion'));
+        if (Object.keys(trackProperties).length > 0 || conversionSendTo) {
+            captureEvent(eventName, trackProperties, conversionSendTo);
         }
         if (Object.keys(identifyProperties).length > 0) {
             identifyUser(identifyProperties);
@@ -720,8 +787,13 @@ var webflowTracker = (function (exports) {
         document.addEventListener('submit', handleFormSubmit);
     };
 
-    getConfig();
+    const config = getConfig();
     initializeConsent();
+    // Auto-configure Google Ads tag if data-google-ads-id is set.
+    // ensureGtag() in initializeConsent has already guaranteed window.gtag exists.
+    if (config.googleAdsId && typeof window.gtag === 'function') {
+        window.gtag('config', config.googleAdsId);
+    }
     initializePageviewListener();
     initializeClickListener();
     initializeFormListener();

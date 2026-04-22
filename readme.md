@@ -10,7 +10,8 @@ Supports **PostHog** and **Google Analytics 4** simultaneously, with built-in co
 - **Dual analytics** — send events to PostHog, GA4, or both at the same time
 - **Cookie consent banner** — GDPR-compliant consent management with all 7 GA4 consent types
 - **GA4 ecommerce** — map CMS collection items to GA4's `items[]` array for purchase, add_to_cart, etc.
-- **GA4 validation** — automatic event name normalization, reserved name blocking, and parameter truncation
+- **GA4 validation** — automatic event name normalization, reserved name blocking, parameter truncation, and warnings for GA4 recommended events missing prescribed parameters (`generate_lead`, `login`, `sign_up`, `search`, `select_content`, `share`)
+- **Google Ads conversions** — mark any event as a Google Ads conversion trigger with a single `data-ga4-conversion` attribute
 - **Dev mode** — log events to the console instead of sending them, for testing
 - **CMS-aware** — pull dynamic property values from CMS items via `data-wrapper` + `data-property-name` patterns
 
@@ -89,6 +90,7 @@ Adjust the attributes based on which providers you're using:
 | `data-ga4-lowercase="true"`          | Force lowercase GA4 event names               | `false`   |
 | `data-ga4-user-id-field="email"`     | Form field to use as GA4 `user_id`            | `"email"` |
 | `data-ga4-consent-defaults="denied"` | Set all GA4 consent types to denied on load   | —         |
+| `data-google-ads-id="AW-XXXXXXX"`    | Google Ads ID for conversion tracking         | —         |
 | `dev-mode`                           | Log events to console instead of sending      | `false`   |
 
 
@@ -104,6 +106,7 @@ See [Configuration Reference](docs/configuration-reference.md) for full details.
 | [Connecting PostHog](docs/connecting-posthog.md)           | PostHog setup and integration guide                                       |
 | [Connecting GA4](docs/connecting-ga4.md)                   | GA4 setup (direct gtag.js or via GTM), naming rules, and parameter limits |
 | [GA4 Ecommerce](docs/ga4-ecommerce.md)                     | Track purchases, add-to-cart, and other ecommerce events                  |
+| [Google Ads Conversions](docs/google-ads-conversions.md)   | Fire Google Ads conversion events via `data-ga4-conversion`               |
 | [Consent Banner](docs/consent-banner.md)                   | Build a GDPR-compliant cookie consent banner in Webflow                   |
 
 

@@ -12,6 +12,7 @@ All tracker configuration is done via attributes on the `<script>` tag that load
   data-ga4-lowercase="false"
   data-ga4-user-id-field="email"
   data-ga4-consent-defaults="denied"
+  data-google-ads-id="AW-XXXXXXX"
   dev-mode
 ></script>
 ```
@@ -79,6 +80,19 @@ Set GA4 consent defaults as a safety net. This calls `gtag('consent', 'default',
 | Omitted | No default consent call is made (relies on existing consent setup or the consent banner) |
 
 This is useful when you want the tracker to set consent defaults even if no other consent script runs before it. See [Consent Banner](consent-banner.md) for full details.
+
+---
+
+### `data-google-ads-id`
+
+Configure a Google Ads conversion ID so `data-ga4-conversion` attributes can use bare label shorthand (e.g., `data-ga4-conversion="AbC-DeFgH"` resolves to `AW-12345678/AbC-DeFgH`).
+
+| Value | Behavior |
+|---|---|
+| `"AW-XXXXXXX"` | The tracker calls `gtag('config', 'AW-XXXXXXX')` on init, and bare `data-ga4-conversion` labels are prefixed with this ID |
+| Omitted | Full `AW-XXXXXXX/label` must be written on every `data-ga4-conversion` attribute |
+
+See [Google Ads Conversions](google-ads-conversions.md) for full details.
 
 ---
 

@@ -1,4 +1,4 @@
-import { captureEcommerceEvent } from './dispatcher';
+import { captureEcommerceEvent, resolveConversionSendTo } from './dispatcher';
 import { findClosestAncestor } from './utils';
 import { resolvePropertyValue } from './property-resolver';
 
@@ -68,6 +68,7 @@ export function handleEcommerceClick(
   const wrapper = findClosestAncestor(element, '[data-wrapper="true"]');
   const items = wrapper ? collectItemsFromWrapper(wrapper) : [];
 
-  captureEcommerceEvent(ecommerceType, properties, items);
+  const conversionSendTo = resolveConversionSendTo(element.getAttribute('data-ga4-conversion'));
+  captureEcommerceEvent(ecommerceType, properties, items, conversionSendTo);
   return true;
 }

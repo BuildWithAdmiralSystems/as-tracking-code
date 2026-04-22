@@ -16,6 +16,8 @@ export function resolvePropertyValue(resolvedValue: string, element: Element): a
       return true;
     case 'boolean:false':
       return false;
+    case 'grabPagePath':
+      return window.location.pathname;
     default:
       return resolvedValue;
   }

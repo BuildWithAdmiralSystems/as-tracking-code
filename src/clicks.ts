@@ -1,4 +1,4 @@
-import { captureEvent } from './dispatcher';
+import { captureEvent, resolveConversionSendTo } from './dispatcher';
 import { findClosestAncestor, parseProperty } from './utils';
 import { resolvePropertyValue } from './property-resolver';
 import { getPageviewProperties } from './pageview';
@@ -23,7 +23,8 @@ const handleCmsClick = (element: HTMLElement, eventName: string) => {
 
   if (handleEcommerceClick(element, eventName, properties)) return;
 
-  captureEvent(eventName, properties);
+  const conversionSendTo = resolveConversionSendTo(element.getAttribute('data-ga4-conversion'));
+  captureEvent(eventName, properties, conversionSendTo);
 };
 
 const handleStaticClick = (element: HTMLElement, eventName: string) => {
@@ -52,7 +53,8 @@ const handleStaticClick = (element: HTMLElement, eventName: string) => {
 
   if (handleEcommerceClick(element, eventName, properties)) return;
 
-  captureEvent(eventName, properties);
+  const conversionSendTo = resolveConversionSendTo(element.getAttribute('data-ga4-conversion'));
+  captureEvent(eventName, properties, conversionSendTo);
 };
 
 const handleGlobalClick = (event: MouseEvent) => {
