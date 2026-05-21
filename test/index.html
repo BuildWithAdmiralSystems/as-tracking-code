@@ -62,11 +62,11 @@
     window.gtag = gtag;
   </script>
 
-  <!-- Mock Customer.io (_cio) -->
+  <!-- Mock Customer.io (cioanalytics / Data Pipelines) -->
   <script>
-    window._cio = {
-      identify: function(attrs) {
-        logCall('CustomerIO.identify', attrs);
+    window.cioanalytics = {
+      identify: function(userId, traits) {
+        logCall('CustomerIO.identify', { userId: userId, traits: traits });
       },
       track: function(event, props) {
         logCall('CustomerIO.track', { event: event, properties: props });
@@ -223,9 +223,9 @@
 
   <!-- The Tracker Script (dev-mode + both adapters) -->
   <!--
-    Customer.io: data-customerio-auto-pageview="true" here drives _cio.page() from
-    the tracker for testing. On a live site, only enable this if the C.io snippet's
-    own data-auto-track-page is set to "false" (otherwise pageviews double-count).
+    Customer.io: data-customerio-auto-pageview="true" here drives cioanalytics.page()
+    from the tracker for testing. On a live site, only enable this if you removed the
+    auto cioanalytics.page() call from the C.io snippet (otherwise pageviews double-count).
   -->
   <script
     src="../dist/webflow-tracker.js"

@@ -1,6 +1,6 @@
 declare global {
     interface Window {
-        _cio: any;
+        cioanalytics: any;
     }
 }
 export declare function captureCustomerioEvent(eventName: string, properties: Record<string, any>): void;

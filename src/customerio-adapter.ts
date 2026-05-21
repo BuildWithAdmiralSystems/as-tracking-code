@@ -2,30 +2,30 @@ import { getConfig } from './config';
 
 declare global {
   interface Window {
-    _cio: any;
+    cioanalytics: any;
   }
 }
 
 function isCustomerioAvailable(): boolean {
   return (
-    window._cio &&
-    typeof window._cio.track === 'function' &&
-    typeof window._cio.identify === 'function' &&
-    typeof window._cio.page === 'function'
+    window.cioanalytics &&
+    typeof window.cioanalytics.track === 'function' &&
+    typeof window.cioanalytics.identify === 'function' &&
+    typeof window.cioanalytics.page === 'function'
   );
 }
 
 export function captureCustomerioEvent(eventName: string, properties: Record<string, any>): void {
   if (!isCustomerioAvailable()) {
-    console.error('Customer.io (_cio) is not available.');
+    console.error('Customer.io (cioanalytics) is not available.');
     return;
   }
-  window._cio.track(eventName, properties);
+  window.cioanalytics.track(eventName, properties);
 }
 
 export function identifyCustomerioUser(userProperties: Record<string, any>): void {
   if (!isCustomerioAvailable()) {
-    console.error('Customer.io (_cio) is not available.');
+    console.error('Customer.io (cioanalytics) is not available.');
     return;
   }
 
@@ -34,18 +34,20 @@ export function identifyCustomerioUser(userProperties: Record<string, any>): voi
 
   if (id === undefined || id === null || String(id).length === 0) {
     console.warn(
-      `Customer.io: no value for the configured id field "${userIdField}" in identify properties. Identify skipped (Customer.io requires an id).`
+      `Customer.io: no value for the configured id field "${userIdField}" in identify properties. Identify skipped (Journeys ignores anonymous identify calls).`
     );
     return;
   }
 
-  window._cio.identify({ id: String(id), ...userProperties });
+  // cioanalytics.identify(userId, traits) — userId is positional, traits is the dict.
+  window.cioanalytics.identify(String(id), userProperties);
 }
 
 export function pageCustomerio(pageName: string, properties: Record<string, any>): void {
   if (!isCustomerioAvailable()) {
-    console.error('Customer.io (_cio) is not available.');
+    console.error('Customer.io (cioanalytics) is not available.');
     return;
   }
-  window._cio.page(pageName, properties);
+  // cioanalytics.page([category], [name], [properties], ...) — (name, properties) overload.
+  window.cioanalytics.page(pageName, properties);
 }

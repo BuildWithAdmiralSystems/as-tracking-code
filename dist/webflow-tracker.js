@@ -470,37 +470,39 @@ var webflowTracker = (function (exports) {
     }
 
     function isCustomerioAvailable() {
-        return (window._cio &&
-            typeof window._cio.track === 'function' &&
-            typeof window._cio.identify === 'function' &&
-            typeof window._cio.page === 'function');
+        return (window.cioanalytics &&
+            typeof window.cioanalytics.track === 'function' &&
+            typeof window.cioanalytics.identify === 'function' &&
+            typeof window.cioanalytics.page === 'function');
     }
     function captureCustomerioEvent(eventName, properties) {
         if (!isCustomerioAvailable()) {
-            console.error('Customer.io (_cio) is not available.');
+            console.error('Customer.io (cioanalytics) is not available.');
             return;
         }
-        window._cio.track(eventName, properties);
+        window.cioanalytics.track(eventName, properties);
     }
     function identifyCustomerioUser(userProperties) {
         if (!isCustomerioAvailable()) {
-            console.error('Customer.io (_cio) is not available.');
+            console.error('Customer.io (cioanalytics) is not available.');
             return;
         }
         const userIdField = getConfig().customerioUserIdField;
         const id = userProperties[userIdField];
         if (id === undefined || id === null || String(id).length === 0) {
-            console.warn(`Customer.io: no value for the configured id field "${userIdField}" in identify properties. Identify skipped (Customer.io requires an id).`);
+            console.warn(`Customer.io: no value for the configured id field "${userIdField}" in identify properties. Identify skipped (Journeys ignores anonymous identify calls).`);
             return;
         }
-        window._cio.identify({ id: String(id), ...userProperties });
+        // cioanalytics.identify(userId, traits) — userId is positional, traits is the dict.
+        window.cioanalytics.identify(String(id), userProperties);
     }
     function pageCustomerio(pageName, properties) {
         if (!isCustomerioAvailable()) {
-            console.error('Customer.io (_cio) is not available.');
+            console.error('Customer.io (cioanalytics) is not available.');
             return;
         }
-        window._cio.page(pageName, properties);
+        // cioanalytics.page([category], [name], [properties], ...) — (name, properties) overload.
+        window.cioanalytics.page(pageName, properties);
     }
 
     function resolveConversionSendTo(raw) {
@@ -556,9 +558,9 @@ var webflowTracker = (function (exports) {
         if (config.ga4Ids.length > 0) {
             captureGA4Event(eventName, properties);
         }
-        // Customer.io: only fire _cio.page() when explicitly opted in. By default the
-        // C.io snippet's own data-auto-track-page handles pageviews — sending here too
-        // would double-count. We deliberately do NOT _cio.track() pageviews.
+        // Customer.io: only fire cioanalytics.page() when explicitly opted in. By
+        // default the cioanalytics snippet auto-sends a page() call on load — sending
+        // here too would double-count. We deliberately do NOT track() pageviews.
         if (config.customerioEnabled && config.customerioAutoPageview) {
             pageCustomerio(eventName, properties);
         }

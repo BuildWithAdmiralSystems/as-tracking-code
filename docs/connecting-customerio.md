@@ -1,39 +1,28 @@
 # Connecting Customer.io
 
-This guide covers how to set up Customer.io with the tracker in a Webflow project. The tracker uses Customer.io's legacy in-app JavaScript snippet (the global `window._cio` object).
+This guide covers how to set up Customer.io with the tracker in a Webflow project. The tracker uses Customer.io's **Data Pipelines** JavaScript source (the global `window.cioanalytics` object, an analytics.js-style client).
 
-## Step 1: Create a Customer.io Workspace
+## Step 1: Create a Data Pipelines JavaScript Source
 
 1. Sign in at [customer.io](https://customer.io)
-2. Open **Settings > Workspace Settings > API Credentials**
-3. Copy your **Site ID** (used by the `_cio` snippet below)
+2. In **Data Pipelines**, create a **JavaScript** source
+3. Copy its **Write Key**
 
-## Step 2: Add the Customer.io Snippet
+## Step 2: Add the cioanalytics Snippet
 
-> **Do NOT copy the snippet below verbatim.** Customer.io updates their snippet periodically. Always use the current snippet from the [Customer.io legacy JS docs](https://docs.customer.io/integrations/data-in/connections/javascript/legacy-js/getting-started/) with your own Site ID.
+> **Do NOT copy a snippet from here verbatim.** Get the current snippet from your own source in **Data Pipelines > Sources > (your JS source) > Settings**. See the [Customer.io JS source docs](https://docs.customer.io/integrations/data-in/connections/javascript/js-source/).
 
-Paste the snippet in Webflow under **Project Settings > Custom Code > Head Code**. It looks roughly like this:
+Paste the snippet in Webflow under **Project Settings > Custom Code > Head Code**. It loads `cioanalytics`, calls `.load()` with your write key, and ends with a `.page()` call:
 
 ```html
 <script type="text/javascript">
-  var _cio = _cio || [];
-  (function() {
-    var a,b,c;a=function(f){return function(){_cio.push([f].
-    concat(Array.prototype.slice.call(arguments,0)))}};b=["load","identify",
-    "sidentify","track","page","on","off"];for(c=0;c<b.length;c++){_cio[b[c]]=a(b[c])};
-    var t = document.createElement('script'),
-        s = document.getElementsByTagName('script')[0];
-    t.async = true;
-    t.id    = 'cio-tracker';
-    t.setAttribute('data-site-id', 'YOUR_SITE_ID');
-    t.setAttribute('data-use-array-params', 'true');
-    t.src = 'https://assets.customer.io/assets/track.js';
-    s.parentNode.insertBefore(t, s);
-  })();
+  // ...minified cioanalytics loader from your dashboard...
+  cioanalytics.load("YOUR_WRITE_KEY");
+  cioanalytics.page();
 </script>
 ```
 
-**The Customer.io snippet must load BEFORE the tracker script.** If `window._cio` isn't present when the tracker fires, you'll see `Customer.io (_cio) is not available.` in the console — the tracker warns, it does not throw.
+**The cioanalytics snippet must load BEFORE the tracker script.** If `window.cioanalytics` isn't present when the tracker fires, you'll see `Customer.io (cioanalytics) is not available.` in the console — the tracker warns, it does not throw.
 
 ## Step 3: Add the Tracker Script
 
@@ -47,32 +36,32 @@ In **Project Settings > Custom Code > Footer Code**, add the tracker with Custom
 ></script>
 ```
 
-Any non-empty `data-customerio-site-id` enables the adapter. The value is informational — the real Site ID is the one in the `_cio` snippet above.
+Any non-empty `data-customerio-site-id` enables the adapter. The value is informational — the snippet's write key is what actually routes data.
 
 ## What Gets Sent to Customer.io
 
-### Events (`_cio.track`)
+### Events (`cioanalytics.track`)
 
-Click and form events declared with `data-event` are sent via `_cio.track(eventName, properties)`.
+Click and form events declared with `data-event` are sent via `cioanalytics.track(eventName, properties)`.
 
-### User Identification (`_cio.identify`)
+### User Identification (`cioanalytics.identify`)
 
 When a form is submitted with fields marked `data-identify="true"` (or `data-both-identify-and-track="true"`), the tracker calls:
 
 ```js
-_cio.identify({ id: "<id>", ...traits });
+cioanalytics.identify(userId, traits);
 ```
 
-The `id` is taken from the field named by `data-customerio-user-id-field` (default `email`). All identify fields — including the id field — are passed as traits. If that field has no value, the identify call is **skipped** with a console warning (Customer.io requires an `id`).
+`userId` is positional (first arg). It's taken from the field named by `data-customerio-user-id-field` (default `email`). All identify fields are passed as `traits`. If that field has no value, the identify call is **skipped** with a console warning — Customer.io Journeys ignores anonymous `identify` calls.
 
-### Pageviews (`_cio.page`) — read this carefully
+### Pageviews (`cioanalytics.page`) — read this carefully
 
-The Customer.io snippet has its own `data-auto-track-page` setting that, **when `true` (the default), already sends a `page` event on every load.** To avoid double-counting:
+The cioanalytics snippet **automatically sends a `page()` call on load** (it's the last line of the snippet). To avoid double-counting:
 
-- **Leave `data-customerio-auto-pageview` off (default).** The tracker sends nothing to Customer.io on pageview — the snippet's native auto-tracking owns pageviews.
-- **Only set `data-customerio-auto-pageview="true"`** if you have set the C.io snippet's `data-auto-track-page="false"`. Then the tracker drives `_cio.page(eventName, properties)` itself, using the `<body data-event>` name and pageview properties.
+- **Leave `data-customerio-auto-pageview` off (default).** The tracker sends nothing to Customer.io on pageview — the snippet's own `page()` owns pageviews.
+- **Only set `data-customerio-auto-pageview="true"`** if you remove the `cioanalytics.page()` line from the snippet. Then the tracker drives `cioanalytics.page(eventName, properties)` itself, using the `<body data-event>` name and pageview properties.
 
-**Never enable both** — pick the snippet's auto-tracking OR the tracker's, not both.
+**Never enable both** — pick the snippet's auto `page()` OR the tracker's, not both.
 
 ## Customer.io + PostHog + GA4 Together
 
@@ -91,7 +80,7 @@ All three adapters can run simultaneously and receive the same click/form events
 
 ## Consent
 
-If you're using the [consent banner](consent-banner.md), Customer.io calls are gated by `analytics_storage` (the same gate as PostHog). When the user hasn't granted analytics consent, all `_cio` calls are silently dropped — Customer.io receives no data until consent is given.
+If you're using the [consent banner](consent-banner.md), Customer.io calls are gated by `analytics_storage` (the same gate as PostHog). When the user hasn't granted analytics consent, all `cioanalytics` calls are silently dropped — Customer.io receives no data until consent is given.
 
 ## Debugging
 
