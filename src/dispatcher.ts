@@ -7,6 +7,11 @@ import {
   captureGA4Conversion,
   identifyGA4User,
 } from './ga4-adapter';
+import {
+  captureCustomerioEvent,
+  identifyCustomerioUser,
+  pageCustomerio,
+} from './customerio-adapter';
 
 export function resolveConversionSendTo(raw: string | null): string | null {
   if (!raw) return null;
@@ -51,6 +56,44 @@ export function captureEvent(
     captureGA4Event(eventName, properties);
   }
 
+  if (config.customerioEnabled) {
+    captureCustomerioEvent(eventName, properties);
+  }
+
+  if (conversionSendTo) {
+    captureGA4Conversion(conversionSendTo, properties);
+  }
+}
+
+export function capturePageview(
+  eventName: string,
+  properties: Record<string, any>,
+  conversionSendTo?: string | null
+): void {
+  const config = getConfig();
+
+  if (config.devMode) {
+    console.log('[Tracker DEV] capturePageview', { eventName, properties, conversionSendTo });
+    return;
+  }
+
+  if (!isAnalyticsGranted()) return;
+
+  if (config.posthogEnabled) {
+    capturePostHogEvent(eventName, properties);
+  }
+
+  if (config.ga4Ids.length > 0) {
+    captureGA4Event(eventName, properties);
+  }
+
+  // Customer.io: only fire _cio.page() when explicitly opted in. By default the
+  // C.io snippet's own data-auto-track-page handles pageviews — sending here too
+  // would double-count. We deliberately do NOT _cio.track() pageviews.
+  if (config.customerioEnabled && config.customerioAutoPageview) {
+    pageCustomerio(eventName, properties);
+  }
+
   if (conversionSendTo) {
     captureGA4Conversion(conversionSendTo, properties);
   }
@@ -72,6 +115,10 @@ export function identifyUser(userProperties: Record<string, any>): void {
 
   if (config.ga4Ids.length > 0 && isAdUserDataGranted()) {
     identifyGA4User(userProperties);
+  }
+
+  if (config.customerioEnabled) {
+    identifyCustomerioUser(userProperties);
   }
 }
 

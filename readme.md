@@ -41,7 +41,7 @@ Add this to **Project Settings > Custom Code > Footer Code** (or before `</body>
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.0.1/dist/webflow-tracker.min.js"
+  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.1.0/dist/webflow-tracker.min.js"
   data-posthog="true"
   data-ga4-id="G-XXXXXXX"
   data-ga4-consent-defaults="denied"
@@ -91,6 +91,9 @@ Adjust the attributes based on which providers you're using:
 | `data-ga4-user-id-field="email"`     | Form field to use as GA4 `user_id`            | `"email"` |
 | `data-ga4-consent-defaults="denied"` | Set all GA4 consent types to denied on load   | —         |
 | `data-google-ads-id="AW-XXXXXXX"`    | Google Ads ID for conversion tracking         | —         |
+| `data-customerio-site-id="XXXX"`     | Enable Customer.io adapter (any non-empty value enables it; the C.io snippet supplies the real Site ID) | — |
+| `data-customerio-user-id-field="email"` | Form field used as the Customer.io `id`    | `"email"` |
+| `data-customerio-auto-pageview="true"`  | Fire `_cio.page()` on pageviews from the tracker. Only enable when the C.io snippet's `data-auto-track-page="false"` | `false` |
 | `dev-mode`                           | Log events to console instead of sending      | `false`   |
 
 
@@ -105,6 +108,7 @@ See [Configuration Reference](docs/configuration-reference.md) for full details.
 | [Configuration Reference](docs/configuration-reference.md) | All script tag attributes and their behavior                              |
 | [Connecting PostHog](docs/connecting-posthog.md)           | PostHog setup and integration guide                                       |
 | [Connecting GA4](docs/connecting-ga4.md)                   | GA4 setup (direct gtag.js or via GTM), naming rules, and parameter limits |
+| [Connecting Customer.io](docs/connecting-customerio.md)    | Customer.io (`_cio`) setup, identify/track/page behavior, pageview note   |
 | [GA4 Ecommerce](docs/ga4-ecommerce.md)                     | Track purchases, add-to-cart, and other ecommerce events                  |
 | [Google Ads Conversions](docs/google-ads-conversions.md)   | Fire Google Ads conversion events via `data-ga4-conversion`               |
 | [Consent Banner](docs/consent-banner.md)                   | Build a GDPR-compliant cookie consent banner in Webflow                   |

@@ -5,6 +5,10 @@ export interface TrackerConfig {
   ga4UserIdField: string;
   ga4ConsentDefaults: 'denied' | null;
   googleAdsId: string | null;
+  customerioEnabled: boolean;
+  customerioSiteId: string | null;
+  customerioUserIdField: string;
+  customerioAutoPageview: boolean;
   devMode: boolean;
 }
 
@@ -35,6 +39,14 @@ function parseConfig(): TrackerConfig {
     ? googleAdsIdRaw.trim()
     : null;
 
+  const customerioSiteIdRaw = attr('data-customerio-site-id');
+  const customerioSiteId = customerioSiteIdRaw && customerioSiteIdRaw.trim().length > 0
+    ? customerioSiteIdRaw.trim()
+    : null;
+  const customerioEnabled = customerioSiteId !== null;
+  const customerioUserIdField = attr('data-customerio-user-id-field') || 'email';
+  const customerioAutoPageview = attr('data-customerio-auto-pageview') === 'true';
+
   const devMode = scriptElement ? scriptElement.hasAttribute('dev-mode') : false;
 
   return {
@@ -44,6 +56,10 @@ function parseConfig(): TrackerConfig {
     ga4UserIdField,
     ga4ConsentDefaults,
     googleAdsId,
+    customerioEnabled,
+    customerioSiteId,
+    customerioUserIdField,
+    customerioAutoPageview,
     devMode,
   };
 }

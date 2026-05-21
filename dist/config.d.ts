@@ -5,6 +5,10 @@ export interface TrackerConfig {
     ga4UserIdField: string;
     ga4ConsentDefaults: 'denied' | null;
     googleAdsId: string | null;
+    customerioEnabled: boolean;
+    customerioSiteId: string | null;
+    customerioUserIdField: string;
+    customerioAutoPageview: boolean;
     devMode: boolean;
 }
 export declare function getConfig(): TrackerConfig;

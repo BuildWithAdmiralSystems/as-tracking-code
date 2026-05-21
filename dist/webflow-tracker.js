@@ -19,6 +19,13 @@ var webflowTracker = (function (exports) {
         const googleAdsId = googleAdsIdRaw && googleAdsIdRaw.trim().length > 0
             ? googleAdsIdRaw.trim()
             : null;
+        const customerioSiteIdRaw = attr('data-customerio-site-id');
+        const customerioSiteId = customerioSiteIdRaw && customerioSiteIdRaw.trim().length > 0
+            ? customerioSiteIdRaw.trim()
+            : null;
+        const customerioEnabled = customerioSiteId !== null;
+        const customerioUserIdField = attr('data-customerio-user-id-field') || 'email';
+        const customerioAutoPageview = attr('data-customerio-auto-pageview') === 'true';
         const devMode = scriptElement ? scriptElement.hasAttribute('dev-mode') : false;
         return {
             posthogEnabled,
@@ -27,6 +34,10 @@ var webflowTracker = (function (exports) {
             ga4UserIdField,
             ga4ConsentDefaults,
             googleAdsId,
+            customerioEnabled,
+            customerioSiteId,
+            customerioUserIdField,
+            customerioAutoPageview,
             devMode,
         };
     }
@@ -458,6 +469,40 @@ var webflowTracker = (function (exports) {
         }
     }
 
+    function isCustomerioAvailable() {
+        return (window._cio &&
+            typeof window._cio.track === 'function' &&
+            typeof window._cio.identify === 'function' &&
+            typeof window._cio.page === 'function');
+    }
+    function captureCustomerioEvent(eventName, properties) {
+        if (!isCustomerioAvailable()) {
+            console.error('Customer.io (_cio) is not available.');
+            return;
+        }
+        window._cio.track(eventName, properties);
+    }
+    function identifyCustomerioUser(userProperties) {
+        if (!isCustomerioAvailable()) {
+            console.error('Customer.io (_cio) is not available.');
+            return;
+        }
+        const userIdField = getConfig().customerioUserIdField;
+        const id = userProperties[userIdField];
+        if (id === undefined || id === null || String(id).length === 0) {
+            console.warn(`Customer.io: no value for the configured id field "${userIdField}" in identify properties. Identify skipped (Customer.io requires an id).`);
+            return;
+        }
+        window._cio.identify({ id: String(id), ...userProperties });
+    }
+    function pageCustomerio(pageName, properties) {
+        if (!isCustomerioAvailable()) {
+            console.error('Customer.io (_cio) is not available.');
+            return;
+        }
+        window._cio.page(pageName, properties);
+    }
+
     function resolveConversionSendTo(raw) {
         if (!raw)
             return null;
@@ -490,6 +535,33 @@ var webflowTracker = (function (exports) {
         if (config.ga4Ids.length > 0) {
             captureGA4Event(eventName, properties);
         }
+        if (config.customerioEnabled) {
+            captureCustomerioEvent(eventName, properties);
+        }
+        if (conversionSendTo) {
+            captureGA4Conversion(conversionSendTo, properties);
+        }
+    }
+    function capturePageview(eventName, properties, conversionSendTo) {
+        const config = getConfig();
+        if (config.devMode) {
+            console.log('[Tracker DEV] capturePageview', { eventName, properties, conversionSendTo });
+            return;
+        }
+        if (!isAnalyticsGranted())
+            return;
+        if (config.posthogEnabled) {
+            capturePostHogEvent(eventName, properties);
+        }
+        if (config.ga4Ids.length > 0) {
+            captureGA4Event(eventName, properties);
+        }
+        // Customer.io: only fire _cio.page() when explicitly opted in. By default the
+        // C.io snippet's own data-auto-track-page handles pageviews — sending here too
+        // would double-count. We deliberately do NOT _cio.track() pageviews.
+        if (config.customerioEnabled && config.customerioAutoPageview) {
+            pageCustomerio(eventName, properties);
+        }
         if (conversionSendTo) {
             captureGA4Conversion(conversionSendTo, properties);
         }
@@ -507,6 +579,9 @@ var webflowTracker = (function (exports) {
         }
         if (config.ga4Ids.length > 0 && isAdUserDataGranted()) {
             identifyGA4User(userProperties);
+        }
+        if (config.customerioEnabled) {
+            identifyCustomerioUser(userProperties);
         }
     }
     function captureEcommerceEvent(ecommerceEventName, eventParams, items, conversionSendTo) {
@@ -599,7 +674,7 @@ var webflowTracker = (function (exports) {
                 }
             });
             const conversionSendTo = resolveConversionSendTo(body.getAttribute('data-ga4-conversion'));
-            captureEvent(eventName, pageviewProperties, conversionSendTo);
+            capturePageview(eventName, pageviewProperties, conversionSendTo);
         }
     };
     const initializePageviewListener = () => {
