@@ -36,6 +36,7 @@
     .badge { display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 3px; background: #e5e7eb; margin-left: 0.5rem; }
     .badge.posthog { background: #1d4aff; color: #fff; }
     .badge.ga4 { background: #ea8600; color: #fff; }
+    .badge.cio { background: #7131f4; color: #fff; }
   </style>
 
   <!-- Mock PostHog -->
@@ -60,6 +61,24 @@
     }
     window.gtag = gtag;
   </script>
+
+  <!-- Mock Customer.io (_cio) -->
+  <script>
+    window._cio = {
+      identify: function(attrs) {
+        logCall('CustomerIO.identify', attrs);
+      },
+      track: function(event, props) {
+        logCall('CustomerIO.track', { event: event, properties: props });
+      },
+      page: function(name, props) {
+        logCall('CustomerIO.page', { name: name, properties: props });
+      },
+      reset: function() {
+        logCall('CustomerIO.reset', {});
+      }
+    };
+  </script>
 </head>
 
 <body data-event="Test Page Viewed">
@@ -68,7 +87,8 @@
   <p data-pageview-property-name="page_category:static_value">
     <span class="badge posthog">PostHog</span>
     <span class="badge ga4">GA4</span>
-    Both adapters enabled. Open the console or watch the log below.
+    <span class="badge cio">Customer.io</span>
+    All three adapters enabled. Open the console or watch the log below.
   </p>
 
   <!-- Pageview properties -->
@@ -202,12 +222,20 @@
   </script>
 
   <!-- The Tracker Script (dev-mode + both adapters) -->
+  <!--
+    Customer.io: data-customerio-auto-pageview="true" here drives _cio.page() from
+    the tracker for testing. On a live site, only enable this if the C.io snippet's
+    own data-auto-track-page is set to "false" (otherwise pageviews double-count).
+  -->
   <script
     src="../dist/webflow-tracker.js"
     data-posthog="true"
     data-ga4-id="G-TEST123"
     data-ga4-consent-defaults="denied"
     data-ga4-user-id-field="email"
+    data-customerio-site-id="cio_test_site"
+    data-customerio-user-id-field="email"
+    data-customerio-auto-pageview="true"
   ></script>
 
 </body>
