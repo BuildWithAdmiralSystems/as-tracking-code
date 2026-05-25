@@ -101,40 +101,40 @@ See [Google Ads Conversions](google-ads-conversions.md) for full details.
 
 ### `data-customerio-site-id`
 
-Enable the Customer.io adapter. The value is informational — the real Site ID is configured in the `_cio` snippet itself; this attribute is the enable flag.
+Enable the Customer.io adapter. The value is informational — the `cioanalytics` snippet's write key is what actually routes data; this attribute is the enable flag.
 
 | Value | Behavior |
 |---|---|
-| Any non-empty string | Customer.io adapter enabled; click/form events sent via `window._cio.track()`, identify via `window._cio.identify()` |
+| Any non-empty string | Customer.io adapter enabled; click/form events sent via `window.cioanalytics.track()`, identify via `window.cioanalytics.identify()` |
 | Omitted or empty | Customer.io adapter is disabled |
 
-Requires the Customer.io `_cio` snippet to be loaded **before** the tracker script. See [Connecting Customer.io](connecting-customerio.md).
+Requires the Customer.io `cioanalytics` snippet to be loaded **before** the tracker script. See [Connecting Customer.io](connecting-customerio.md).
 
 ---
 
 ### `data-customerio-user-id-field`
 
-Which form field name to use as the Customer.io `id` when a form with `data-identify` fields is submitted.
+Which form field name to use as the Customer.io `userId` when a form with `data-identify` fields is submitted.
 
 | Value | Behavior |
 |---|---|
-| `"email"` (default) | The form field with `name="email"` becomes the `id` on `_cio.identify({ id, ... })` |
-| Any field name | That field's value becomes the `id`; all identify fields (including this one) are passed as traits |
+| `"email"` (default) | The form field with `name="email"` becomes the positional `userId` on `cioanalytics.identify(userId, traits)` |
+| Any field name | That field's value becomes the `userId`; all identify fields are passed as `traits` |
 
-If the configured field has no value, the identify call is skipped with a console warning (Customer.io requires an `id`).
+If the configured field has no value, the identify call is skipped with a console warning — Customer.io Journeys ignores anonymous `identify` calls.
 
 ---
 
 ### `data-customerio-auto-pageview`
 
-Control whether the tracker fires `_cio.page()` on pageviews.
+Control whether the tracker fires `cioanalytics.page()` on pageviews.
 
 | Value | Behavior |
 |---|---|
-| `"true"` | The tracker calls `_cio.page(eventName, properties)` on pageview |
+| `"true"` | The tracker calls `cioanalytics.page(eventName, properties)` on pageview |
 | `"false"` or omitted | The tracker sends nothing to Customer.io on pageview |
 
-The Customer.io `_cio` snippet has its own `data-auto-track-page` (default `true`) that already sends pageviews. **Only set this to `"true"` if you have set the snippet's `data-auto-track-page="false"`**, otherwise pageviews double-count. Never enable both.
+The Customer.io `cioanalytics` snippet auto-sends a `page()` call on load (its last line). **Only set this to `"true"` if you remove that `cioanalytics.page()` line from the snippet**, otherwise pageviews double-count. Never enable both.
 
 ---
 

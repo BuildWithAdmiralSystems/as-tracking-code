@@ -87,9 +87,9 @@ export function capturePageview(
     captureGA4Event(eventName, properties);
   }
 
-  // Customer.io: only fire _cio.page() when explicitly opted in. By default the
-  // C.io snippet's own data-auto-track-page handles pageviews — sending here too
-  // would double-count. We deliberately do NOT _cio.track() pageviews.
+  // Customer.io: only fire cioanalytics.page() when explicitly opted in. By
+  // default the cioanalytics snippet auto-sends a page() call on load — sending
+  // here too would double-count. We deliberately do NOT track() pageviews.
   if (config.customerioEnabled && config.customerioAutoPageview) {
     pageCustomerio(eventName, properties);
   }

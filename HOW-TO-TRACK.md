@@ -538,15 +538,14 @@ gtag('set', { user_properties: {
 }});
 ```
 
-**Customer.io** (the `email` field is used as the `id` by default — configurable via `data-customerio-user-id-field`; all identify fields, including the id field, are passed as traits):
+**Customer.io** (the `email` field is used as the positional `userId` by default — configurable via `data-customerio-user-id-field`; all identify fields are passed as `traits`):
 ```jsx
-_cio.track('Form Submitted', {
+cioanalytics.track('Form Submitted', {
   company_name: 'Acme Pte Ltd',
   interest: 'Some interest from the user',
 });
 
-_cio.identify({
-  id: 'john@acme.com',
+cioanalytics.identify('john@acme.com', {
   email: 'john@acme.com',
   first_name: 'John',
   last_name: 'Tan',
@@ -554,7 +553,7 @@ _cio.identify({
 });
 ```
 
-> Pageviews are **not** sent to Customer.io by the tracker unless `data-customerio-auto-pageview="true"` — by default the `_cio` snippet's own `data-auto-track-page` handles pageviews. See [Connecting Customer.io](docs/connecting-customerio.md).
+> Pageviews are **not** sent to Customer.io by the tracker unless `data-customerio-auto-pageview="true"` — by default the `cioanalytics` snippet auto-sends its own `page()` call on load. See [Connecting Customer.io](docs/connecting-customerio.md).
 
 ## 2.6. CMS Items (or Repeated Items)
 
