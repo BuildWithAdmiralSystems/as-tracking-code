@@ -41,10 +41,9 @@ Add this to **Project Settings > Custom Code > Footer Code** (or before `</body>
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.1.0/dist/webflow-tracker.min.js"
+  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.2.0/dist/webflow-tracker.min.js"
   data-posthog="true"
   data-ga4-id="G-XXXXXXX"
-  data-ga4-consent-defaults="denied"
 ></script>
 ```
 
@@ -52,7 +51,7 @@ Adjust the attributes based on which providers you're using:
 
 - Remove `data-posthog="true"` if you're not using PostHog
 - Remove `data-ga4-id="G-XXXXXXX"` if you're not using GA4 (replace `G-XXXXXXX` with your actual Measurement ID)
-- Keep `data-ga4-consent-defaults="denied"` if you want GDPR-compliant consent (recommended)
+- Add `data-ga4-consent-defaults="denied"` only if you're using the consent banner and want analytics blocked until consent is granted. If omitted, tracker events are allowed by default.
 
 ### 3. Add Events via Attributes
 
@@ -89,7 +88,7 @@ Adjust the attributes based on which providers you're using:
 | `data-ga4-id="G-XXX"`                | Enable GA4 (comma-separated for multiple IDs) | —         |
 | `data-ga4-lowercase="true"`          | Force lowercase GA4 event names               | `false`   |
 | `data-ga4-user-id-field="email"`     | Form field to use as GA4 `user_id`            | `"email"` |
-| `data-ga4-consent-defaults="denied"` | Set all GA4 consent types to denied on load   | —         |
+| `data-ga4-consent-defaults="denied"` | Set all GA4 consent types to denied on load; omit to allow events by default | —         |
 | `data-google-ads-id="AW-XXXXXXX"`    | Google Ads ID for conversion tracking         | —         |
 | `data-customerio-site-id="XXXX"`     | Enable Customer.io adapter (any non-empty value enables it; the `cioanalytics` snippet's write key routes data) | — |
 | `data-customerio-user-id-field="email"` | Form field used as the Customer.io `userId` | `"email"` |

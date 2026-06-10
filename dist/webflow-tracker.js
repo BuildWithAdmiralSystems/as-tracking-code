@@ -228,8 +228,11 @@ var webflowTracker = (function (exports) {
             currentConsent = stored;
             pushConsentUpdate(stored);
         }
-        else {
+        else if (config.ga4ConsentDefaults === 'denied') {
             currentConsent = allDenied();
+        }
+        else {
+            currentConsent = allGranted();
         }
         const wireOnReady = () => {
             wireBanner();
