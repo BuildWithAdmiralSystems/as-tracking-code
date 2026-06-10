@@ -80,7 +80,7 @@ Set GA4 consent defaults as a safety net. This calls `gtag('consent', 'default',
 | Value | Behavior |
 |---|---|
 | `"denied"` | All 7 consent types default to `'denied'` |
-| Omitted | No default consent call is made (relies on existing consent setup or the consent banner) |
+| Omitted | No default consent call is made and the tracker allows events by default, relying on your existing consent setup if you have one |
 
 This is useful when you want the tracker to set consent defaults even if no other consent script runs before it. See [Consent Banner](consent-banner.md) for full details.
 
