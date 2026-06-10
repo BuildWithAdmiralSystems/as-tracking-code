@@ -174,7 +174,6 @@ Dev mode applies to **all** adapters (PostHog, GA4, and Customer.io). Console ou
 <script
   src=".../webflow-tracker.min.js"
   data-ga4-id="G-XXXXXXX"
-  data-ga4-consent-defaults="denied"
 ></script>
 ```
 
@@ -185,7 +184,6 @@ Dev mode applies to **all** adapters (PostHog, GA4, and Customer.io). Console ou
   src=".../webflow-tracker.min.js"
   data-posthog="true"
   data-ga4-id="G-XXXXXXX"
-  data-ga4-consent-defaults="denied"
 ></script>
 ```
 

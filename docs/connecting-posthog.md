@@ -69,11 +69,12 @@ You can run PostHog and GA4 simultaneously:
   src=".../webflow-tracker.min.js"
   data-posthog="true"
   data-ga4-id="G-XXXXXXX"
-  data-ga4-consent-defaults="denied"
 ></script>
 ```
 
 Both adapters receive the same events. GA4 gets its own name normalization (spaces to underscores) applied automatically.
+
+Add `data-ga4-consent-defaults="denied"` only if you're also using the consent banner and want analytics blocked until consent is granted. If omitted, tracker events are allowed by default.
 
 ## Consent
 

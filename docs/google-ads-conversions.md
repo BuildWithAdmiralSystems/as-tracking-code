@@ -30,11 +30,12 @@ Add `data-google-ads-id` to the tracker script tag:
   src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@latest/dist/webflow-tracker.min.js"
   data-ga4-id="G-XXXXXXX"
   data-google-ads-id="AW-12345678"
-  data-ga4-consent-defaults="denied"
 ></script>
 ```
 
 The tracker will call `gtag('config', 'AW-12345678')` on init so you only need the GA4 gtag snippet — the Google Ads side is configured automatically.
+
+Add `data-ga4-consent-defaults="denied"` only if you're using the consent banner and want analytics/conversion events blocked until consent is granted. If omitted, tracker events are allowed by default.
 
 ### Step 3: Tag the Event
 

@@ -30,7 +30,7 @@ In **Project Settings > Custom Code > Footer Code**, add the tracker with Custom
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.1.0/dist/webflow-tracker.min.js"
+  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.2.0/dist/webflow-tracker.min.js"
   data-customerio-site-id="YOUR_SITE_ID"
   data-customerio-user-id-field="email"
 ></script>
@@ -72,11 +72,12 @@ All three adapters can run simultaneously and receive the same click/form events
   src=".../webflow-tracker.min.js"
   data-posthog="true"
   data-ga4-id="G-XXXXXXX"
-  data-ga4-consent-defaults="denied"
   data-customerio-site-id="YOUR_SITE_ID"
   data-customerio-user-id-field="email"
 ></script>
 ```
+
+Add `data-ga4-consent-defaults="denied"` only if you're also using the consent banner and want analytics blocked until consent is granted. If omitted, tracker events are allowed by default.
 
 ## Consent
 

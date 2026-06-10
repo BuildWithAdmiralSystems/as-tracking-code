@@ -93,11 +93,12 @@ In **Project Settings > Custom Code > Footer Code** (must come **after** the GA4
 <script
   src="https://cdn.jsdelivr.net/gh/your-org/as-tracking-code@latest/dist/webflow-tracker.min.js"
   data-ga4-id="G-XXXXXXX"
-  data-ga4-consent-defaults="denied"
 ></script>
 ```
 
 Replace `G-XXXXXXX` with your actual Measurement ID (the one starting with `G-`, not the GTM container ID).
+
+By default, events are allowed when `data-ga4-consent-defaults` is omitted. Add `data-ga4-consent-defaults="denied"` only when you're using the consent banner and want analytics blocked until the visitor grants consent.
 
 ### Multiple GA4 Properties
 
@@ -107,7 +108,6 @@ To send events to multiple GA4 properties, separate the IDs with commas:
 <script
   src=".../webflow-tracker.min.js"
   data-ga4-id="G-XXXXXXX,G-YYYYYYY"
-  data-ga4-consent-defaults="denied"
 ></script>
 ```
 
