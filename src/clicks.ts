@@ -61,7 +61,9 @@ const handleGlobalClick = (event: MouseEvent) => {
   const target = event.target as HTMLElement;
   const eventElement = findClosestAncestor(target, '[data-event]');
 
-  if (eventElement) {
+  // <form data-event> is a submit event and <body data-event> is a pageview
+  // event. Both are handled elsewhere, so a click inside them is not a click event.
+  if (eventElement && eventElement.tagName !== 'FORM' && eventElement.tagName !== 'BODY') {
     const eventName = eventElement.getAttribute('data-event');
     if (eventName) {
       const isCms = eventElement.getAttribute('data-cms') === 'true';

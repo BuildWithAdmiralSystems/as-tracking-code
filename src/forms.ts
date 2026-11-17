@@ -2,16 +2,17 @@ import { captureEvent, identifyUser, resolveConversionSendTo } from './dispatche
 import { findClosestAncestor } from './utils';
 
 const handleFormSubmit = (event: SubmitEvent) => {
-    const submitButton = event.submitter as HTMLElement;
-    if (!submitButton) return;
+    // Use the form that was submitted. event.submitter can be null (for example
+    // on programmatic submits), and the tracker must never block or replay the
+    // submission: Webflow and custom form scripts own it.
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
 
-    const form = findClosestAncestor(submitButton, 'form') as HTMLFormElement | null;
+    const form = findClosestAncestor(target, 'form') as HTMLFormElement | null;
     if (!form) return;
 
     const eventName = form.getAttribute('data-event');
     if (!eventName) return;
-
-    event.preventDefault();
 
     const trackProperties: Record<string, any> = {};
     const identifyProperties: Record<string, any> = {};
@@ -48,18 +49,12 @@ const handleFormSubmit = (event: SubmitEvent) => {
 
     const conversionSendTo = resolveConversionSendTo(form.getAttribute('data-ga4-conversion'));
 
-    if (Object.keys(trackProperties).length > 0 || conversionSendTo) {
-        captureEvent(eventName, trackProperties, conversionSendTo);
-    }
+    // Always send the form event, even when no field is marked data-track.
+    captureEvent(eventName, trackProperties, conversionSendTo);
 
     if (Object.keys(identifyProperties).length > 0) {
         identifyUser(identifyProperties);
     }
-
-    // Allow a small delay for tracking to complete before submitting
-    setTimeout(() => {
-        form.submit();
-    }, 300);
 };
 
 

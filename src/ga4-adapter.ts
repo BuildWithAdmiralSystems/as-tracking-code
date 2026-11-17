@@ -7,6 +7,16 @@ import {
   warnMissingRecommendedParams,
 } from './ga4-validator';
 
+/**
+ * Send events only to the configured data-ga4-id properties. Without send_to,
+ * gtag delivers an event to every Google tag on the page, and a GTM container
+ * can route it to a different property than the one the tracker was set up for.
+ */
+function ga4Destination(): Record<string, any> {
+  const ids = getConfig().ga4Ids;
+  return ids.length > 0 ? { send_to: ids.length === 1 ? ids[0] : ids } : {};
+}
+
 function isGtagAvailable(): boolean {
   return typeof window.gtag === 'function';
 }
@@ -26,7 +36,7 @@ export function captureGA4Event(eventName: string, properties: Record<string, an
 
   const truncated = validateAndTruncateParams(properties);
   warnMissingRecommendedParams(normalized, truncated);
-  window.gtag('event', normalized, truncated);
+  window.gtag('event', normalized, { ...truncated, ...ga4Destination() });
 }
 
 export function captureGA4EcommerceEvent(
@@ -46,7 +56,7 @@ export function captureGA4EcommerceEvent(
   }
 
   const truncated = validateAndTruncateParams(eventParams);
-  window.gtag('event', ecommerceEventName, { ...truncated, items });
+  window.gtag('event', ecommerceEventName, { ...truncated, items, ...ga4Destination() });
 }
 
 export function captureGA4Conversion(
