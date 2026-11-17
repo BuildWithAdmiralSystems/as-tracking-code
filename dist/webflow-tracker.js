@@ -410,6 +410,15 @@ var webflowTracker = (function (exports) {
         }
     }
 
+    /**
+     * Send events only to the configured data-ga4-id properties. Without send_to,
+     * gtag delivers an event to every Google tag on the page, and a GTM container
+     * can route it to a different property than the one the tracker was set up for.
+     */
+    function ga4Destination() {
+        const ids = getConfig().ga4Ids;
+        return ids.length > 0 ? { send_to: ids.length === 1 ? ids[0] : ids } : {};
+    }
     function isGtagAvailable() {
         return typeof window.gtag === 'function';
     }
@@ -426,7 +435,7 @@ var webflowTracker = (function (exports) {
         }
         const truncated = validateAndTruncateParams(properties);
         warnMissingRecommendedParams(normalized, truncated);
-        window.gtag('event', normalized, truncated);
+        window.gtag('event', normalized, { ...truncated, ...ga4Destination() });
     }
     function captureGA4EcommerceEvent(ecommerceEventName, eventParams, items) {
         if (!isGtagAvailable()) {
@@ -439,7 +448,7 @@ var webflowTracker = (function (exports) {
             return;
         }
         const truncated = validateAndTruncateParams(eventParams);
-        window.gtag('event', ecommerceEventName, { ...truncated, items });
+        window.gtag('event', ecommerceEventName, { ...truncated, items, ...ga4Destination() });
     }
     function captureGA4Conversion(sendTo, properties) {
         if (!isGtagAvailable()) {
@@ -797,7 +806,9 @@ var webflowTracker = (function (exports) {
     const handleGlobalClick = (event) => {
         const target = event.target;
         const eventElement = findClosestAncestor(target, '[data-event]');
-        if (eventElement) {
+        // <form data-event> is a submit event and <body data-event> is a pageview
+        // event. Both are handled elsewhere, so a click inside them is not a click event.
+        if (eventElement && eventElement.tagName !== 'FORM' && eventElement.tagName !== 'BODY') {
             const eventName = eventElement.getAttribute('data-event');
             if (eventName) {
                 const isCms = eventElement.getAttribute('data-cms') === 'true';
@@ -815,16 +826,18 @@ var webflowTracker = (function (exports) {
     };
 
     const handleFormSubmit = (event) => {
-        const submitButton = event.submitter;
-        if (!submitButton)
+        // Use the form that was submitted. event.submitter can be null (for example
+        // on programmatic submits), and the tracker must never block or replay the
+        // submission: Webflow and custom form scripts own it.
+        const target = event.target;
+        if (!target)
             return;
-        const form = findClosestAncestor(submitButton, 'form');
+        const form = findClosestAncestor(target, 'form');
         if (!form)
             return;
         const eventName = form.getAttribute('data-event');
         if (!eventName)
             return;
-        event.preventDefault();
         const trackProperties = {};
         const identifyProperties = {};
         const formElements = form.elements;
@@ -852,16 +865,11 @@ var webflowTracker = (function (exports) {
             }
         }
         const conversionSendTo = resolveConversionSendTo(form.getAttribute('data-ga4-conversion'));
-        if (Object.keys(trackProperties).length > 0 || conversionSendTo) {
-            captureEvent(eventName, trackProperties, conversionSendTo);
-        }
+        // Always send the form event, even when no field is marked data-track.
+        captureEvent(eventName, trackProperties, conversionSendTo);
         if (Object.keys(identifyProperties).length > 0) {
             identifyUser(identifyProperties);
         }
-        // Allow a small delay for tracking to complete before submitting
-        setTimeout(() => {
-            form.submit();
-        }, 300);
     };
     const initializeFormListener = () => {
         document.addEventListener('submit', handleFormSubmit);
