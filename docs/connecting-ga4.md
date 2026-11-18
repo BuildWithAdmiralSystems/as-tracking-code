@@ -102,6 +102,8 @@ By default, events are allowed when `data-ga4-consent-defaults` is omitted. Add 
 
 ### Multiple GA4 Properties
 
+Events are sent only to the Measurement IDs in `data-ga4-id` (the tracker sets `send_to` on every event). Other Google tags on the page, for example an older GA4 property, do not receive them. Each ID in `data-ga4-id` must also be loaded on the page, by its own `gtag('config', ...)` line or by a Google tag in GTM. An ID that is not loaded receives nothing.
+
 To send events to multiple GA4 properties, separate the IDs with commas:
 
 ```html

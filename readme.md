@@ -41,7 +41,7 @@ Add this to **Project Settings > Custom Code > Footer Code** (or before `</body>
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.2.0/dist/webflow-tracker.min.js"
+  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.2.1/dist/webflow-tracker.min.js"
   data-posthog="true"
   data-ga4-id="G-XXXXXXX"
 ></script>
@@ -75,7 +75,7 @@ Adjust the attributes based on which providers you're using:
 <form data-event="Contact Form Submitted">
   <input name="email" data-identify="true" />
   <input name="company" data-track="true" />
-  <input type="submit" data-submit-button="true" />
+  <input type="submit" />
 </form>
 ```
 
