@@ -15,6 +15,17 @@ An attribute-driven analytics tracker for Webflow sites. One script tag reads `d
 2. Call `session_brief` in War Room, then `list_issues` with project "AST – Admiral Systems Tracking Code".
 3. Start the War Room timer on the issue you work on. Stop it when you finish.
 
+## How to work: orchestrate, delegate to Opus
+
+The main session is an orchestrator. It keeps the plan, the decisions and the final report, and it keeps its own context clean.
+
+- Split the work into independent parts and give each part to a subagent on Opus (Claude Code: the `Agent` tool with `model: "opus"`). Run independent parts in parallel.
+- Delegate anything that reads many files, loops, drives the browser or digs through logs: a headful test run, a root-cause hunt, vendor research, a build or a refactor. Do a one-call lookup or a small edit yourself.
+- Brief each subagent with the goal, what is already known and ruled out, the files to read, the limits (what it must not edit, push or post), and the shape of the report. Tell it to mark what it inferred and what it did not test.
+- A subagent that edits the repo while another part runs gets its own worktree (`isolation: "worktree"`). It commits on a branch and does not push.
+- Check a subagent's key claim before you repeat it: rerun the one command that proves it.
+- The orchestrator alone writes to War Room, pushes, opens PRs and releases.
+
 ## Tracker
 
 War Room (MCP server `war-room`) is the tracker. Project: **AST – Admiral Systems Tracking Code**, slug `ast-admiral-systems-tracking-code`, issue prefix `DLVRY`. Read `how_to` before your first write. Work that installs the tracker on a client site belongs in that client's project, not here.
@@ -32,7 +43,7 @@ python -m http.server 4173   # then open http://127.0.0.1:4173/test/index.html
 
 There are no unit tests. `test/index.html` is the test ground. It mocks `posthog`, `gtag` and `cioanalytics` and prints every call to the Event Log on the page.
 
-- Test in a visible browser with real clicks (in T3 Code: `preview_open`, then `preview_act`). A headless run on a mock page is not enough: the bugs fixed in v0.2.1 were about real submits and real navigation.
+- Test in a visible browser with real clicks (in T3 Code: `preview_open`, then `preview_act`). Target elements with `locator='aria-ref=...'` from a `preview_snapshot`; a `selector` click times out. Focus a field with a real click before a key press: a key press after a scripted `focus()` does not reach the page. A headless run on a mock page is not enough: the bugs fixed in v0.2.1 were about real submits and real navigation.
 - Consent starts denied. Click "Accept All" on the banner first, or no event is sent.
 - The log is kept in `sessionStorage`, so it survives the reload of a native form submit. "PAGE UNLOAD" in the log means the browser really navigated.
 - `?src=<url>` loads another bundle for the rest of the tab, for example a released one from jsDelivr, so you can compare old and new. `?src=default` goes back to `../dist/webflow-tracker.js`. `?ga4=G-A,G-B` sets `data-ga4-id`.
@@ -56,7 +67,9 @@ Sites load the bundle from jsDelivr by git tag, so a release is a tag. Sites pin
 2. `pnpm run build`, commit `dist/`.
 3. Merge the PR to `main` with a merge commit.
 4. `gh release create vX.Y.Z --target main` with notes that name each behaviour change.
-5. Check `https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@X.Y.Z/dist/webflow-tracker.min.js`.
+5. Wait a few minutes after the tag before you open any jsDelivr URL for it. Then fetch `https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@X.Y.Z/dist/webflow-tracker.min.js` and compare its sha256 with `git show vX.Y.Z:dist/webflow-tracker.min.js | sha256sum`. They must match.
+
+jsDelivr stores what it first serves for a version forever, and a purge does not change it. For 0.2.1 the `.min.js` was requested seconds after tagging and jsDelivr stored a file it minified itself ("Minified by jsDelivr" banner). The code in it is identical to ours, but its hash is not, so Subresource Integrity with the repo hash fails for that file. Only jsDelivr can replace it.
 
 A released tag is never moved. A fix is a new version.
 
@@ -65,4 +78,5 @@ A released tag is never moved. A fix is a new version.
 - The repo is public. Put no client data, keys or personal details in code, docs, commits or PRs.
 - Remote owner is `BuildWithAdmiralSystems`. With several `gh` accounts, make that one active before any network call: `gh auth switch -u BuildWithAdmiralSystems`.
 - Branch from `main`. Commit or push only when the user asks.
+- `.claude/worktrees/` holds subagent worktrees and is ignored.
 - `.gitattributes` forces LF. On Windows, `git status` can still list `dist/` as modified after a build when nothing changed; `git add dist` clears it.
