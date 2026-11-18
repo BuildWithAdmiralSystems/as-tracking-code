@@ -134,6 +134,8 @@ npx serve -l 3000 .
 # then open http://localhost:3000/test/index.html
 ```
 
+Accept the cookie banner first: consent starts denied and no event is sent until it is granted. The Event Log on the page survives reloads. Add `?src=<bundle URL>` to test another build, for example a released one from jsDelivr.
+
 ## Architecture
 
 ```
