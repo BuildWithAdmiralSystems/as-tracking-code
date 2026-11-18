@@ -30,7 +30,7 @@ In **Project Settings > Custom Code > Footer Code**, add the tracker with Custom
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.2.0/dist/webflow-tracker.min.js"
+  src="https://cdn.jsdelivr.net/gh/BuildWithAdmiralSystems/as-tracking-code@0.2.1/dist/webflow-tracker.min.js"
   data-customerio-site-id="YOUR_SITE_ID"
   data-customerio-user-id-field="email"
 ></script>

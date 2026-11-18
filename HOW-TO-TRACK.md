@@ -365,8 +365,11 @@ gtag('event', 'Featured_Product_Clicked', {
 
 ## 2.5. Form Submission Events
 
-Add a `data-event` property to a `<form>` tag. This is your event name. Optionally, you can add `data-submit-button` Custom Attribute inside the submit button to force the Code Snippet to mark the submit button.
-The code snippet will detect which `<form>` this button belongs and pulls **all the form values inside.**
+Add a `data-event` property to a `<form>` tag. This is your event name. The event is sent once each time the form is submitted, by a click on the submit button or by the Enter key, also when no field is tracked.
+
+The code snippet only listens. It does not block, delay or resend the submission, so Webflow's own form handling, redirects and success messages work as usual. The event means the visitor submitted the form. It does not prove that Webflow accepted the submission.
+
+A click inside the form is not an event. Do not put `data-event` on the submit button as well: the button would send a click event on top of the form event.
 
 Then, **Make sure you put an `name` inside every form fields that you want to track. This will later become your property name.** This is a super important step.
 
@@ -442,18 +445,7 @@ Value: `true`
 <input type="number" name="company_size" data-parse-float="true" />
 ```
 
-Lastly, we recommend you to tag the submit button using `data-submit-button="true"` just in case the Code snippet doesn't catch that the button is a submit button.
-
-```html
-<input
-  type="submit"
-  data-event="Form Submitted"
-  data-submit-button="true"
->Submit
-</input>
-```
-
-Combining all of the above, here’s an example form to make everything clear; pay attention on where the calls of `data-identify`, `data-track`, `data-both-identify-and-track`, `data-ignore`, `data-parse-int`, `data-parse-float`, and `data-submit-button`:
+Combining all of the above, here’s an example form to make everything clear; pay attention on where the calls of `data-identify`, `data-track`, `data-both-identify-and-track`, `data-ignore`, `data-parse-int`, and `data-parse-float`:
 
 ```html
 <form id="example-form" data-event="Form Submitted">
@@ -501,7 +493,6 @@ Combining all of the above, here’s an example form to make everything clear; p
         ></textarea>
     <input
         type="submit"
-        data-submit-button="true"
     >Submit
     </input>
 </form>
