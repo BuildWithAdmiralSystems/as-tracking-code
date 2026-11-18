@@ -39,6 +39,31 @@
     .badge.cio { background: #7131f4; color: #fff; }
   </style>
 
+  <!-- Logging helper. The log lives in sessionStorage, so it survives the reload of a native form submit. -->
+  <script>
+    function renderLog() {
+      var el = document.getElementById('event-log');
+      if (el) el.textContent = sessionStorage.getItem('trackerLog') || '(events will appear here)';
+    }
+    function logCall(label, data) {
+      var entry = '[' + new Date().toLocaleTimeString() + '] ' + label + '\n' + JSON.stringify(data, null, 2) + '\n\n';
+      sessionStorage.setItem('trackerLog', (sessionStorage.getItem('trackerLog') || '') + entry);
+      renderLog();
+      console.log(label, data);
+    }
+    document.addEventListener('DOMContentLoaded', renderLog);
+    // A page that unloads after a submit means the browser really navigated.
+    window.addEventListener('pagehide', function() { logCall('PAGE UNLOAD', { url: location.href }); });
+
+    // Bundle under test: ?src=<url> picks another build (kept for the tab), ?src=default resets.
+    // ?ga4=<ids> sets data-ga4-id.
+    var qs = new URLSearchParams(location.search);
+    ['src', 'ga4'].forEach(function(k) { if (qs.get(k)) sessionStorage.setItem('tracker_' + k, qs.get(k)); });
+    var trackerSrc = sessionStorage.getItem('tracker_src');
+    if (!trackerSrc || trackerSrc === 'default') trackerSrc = '../dist/webflow-tracker.js';
+    var trackerGa4 = sessionStorage.getItem('tracker_ga4') || 'G-TEST123';
+  </script>
+
   <!-- Mock PostHog -->
   <script>
     window.posthog = {
@@ -90,6 +115,7 @@
     <span class="badge cio">Customer.io</span>
     All three adapters enabled. Open the console or watch the log below.
   </p>
+  <p>Bundle under test: <code id="bundle-under-test"></code></p>
 
   <!-- Pageview properties -->
   <span  style="display:none">Test Page</span>
@@ -164,6 +190,39 @@
     </form>
   </section>
 
+  <!-- SECTION: Form with no tracked fields, and clicks inside a form -->
+  <section>
+    <h2>Form With No data-track Fields</h2>
+    <form data-event="Bare Form Submitted">
+      <label for="bare_name">Name (click me: a click inside a form is not an event)</label>
+      <input type="text" id="bare_name" name="bare_name" value="Jane" />
+      <button type="button" data-event="Help Clicked" data-property-name1="where:inside form">Button with its own data-event</button>
+      <button type="submit">Submit Bare Form</button>
+    </form>
+  </section>
+
+  <!-- SECTION: Webflow-style form. webflow.js cancels the submit and posts by AJAX; the handler below does the same. -->
+  <section>
+    <h2>Webflow-Style AJAX Form</h2>
+    <div class="w-form">
+      <form id="wf-form" method="post" data-event="Webflow Form Submitted">
+        <label for="wf_email">Email</label>
+        <input type="email" id="wf_email" name="email" value="test@example.com" />
+        <button type="submit">Submit Webflow Form</button>
+      </form>
+      <div id="wf-done" style="display:none">Thank you! Your submission has been received! (page did not navigate)</div>
+    </div>
+    <script>
+      document.addEventListener('submit', function(e) {
+        if (e.target.id !== 'wf-form') return;
+        e.preventDefault();
+        logCall('Webflow AJAX submit handled', {});
+        e.target.style.display = 'none';
+        document.getElementById('wf-done').style.display = 'block';
+      });
+    </script>
+  </section>
+
   <!-- SECTION: Console API -->
   <section>
     <h2>Console API</h2>
@@ -176,6 +235,7 @@
     <button onclick="logCall('getConsentState()', webflowTracker.getConsentState())">
       Read Consent State
     </button>
+    <button onclick="sessionStorage.removeItem('trackerLog'); renderLog();">Clear Log</button>
     <button class="danger" onclick="localStorage.removeItem('consentMode'); location.reload();">
       Reset Consent (reload)
     </button>
@@ -209,34 +269,19 @@
 
   <div id="as-cookie-icon" class="cookie-icon">🍪</div>
 
-  <!-- Logging helper (must be before tracker) -->
-  <script>
-    var logEl = null;
-    function logCall(label, data) {
-      if (!logEl) logEl = document.getElementById('event-log');
-      var ts = new Date().toLocaleTimeString();
-      var entry = '[' + ts + '] ' + label + '\n' + JSON.stringify(data, null, 2) + '\n\n';
-      if (logEl) logEl.textContent += entry;
-      console.log(label, data);
-    }
-  </script>
-
-  <!-- The Tracker Script (dev-mode + both adapters) -->
+  <!-- The Tracker Script (all three adapters, consent denied until you accept the banner) -->
   <!--
     Customer.io: data-customerio-auto-pageview="true" here drives cioanalytics.page()
     from the tracker for testing. On a live site, only enable this if you removed the
     auto cioanalytics.page() call from the C.io snippet (otherwise pageviews double-count).
   -->
-  <script
-    src="../dist/webflow-tracker.js"
-    data-posthog="true"
-    data-ga4-id="G-TEST123"
-    data-ga4-consent-defaults="denied"
-    data-ga4-user-id-field="email"
-    data-customerio-site-id="cio_test_site"
-    data-customerio-user-id-field="email"
-    data-customerio-auto-pageview="true"
-  ></script>
+  <script>
+    var esc = function(v) { return String(v).replace(/"/g, '&quot;'); };
+    document.write('<script src="' + esc(trackerSrc) + '" data-posthog="true" data-ga4-id="' + esc(trackerGa4) + '"' +
+      ' data-ga4-consent-defaults="denied" data-ga4-user-id-field="email" data-customerio-site-id="cio_test_site"' +
+      ' data-customerio-user-id-field="email" data-customerio-auto-pageview="true"><\/script>');
+    document.getElementById('bundle-under-test').textContent = trackerSrc + ' | data-ga4-id=' + trackerGa4;
+  </script>
 
 </body>
 </html>
